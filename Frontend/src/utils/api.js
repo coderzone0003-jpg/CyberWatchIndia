@@ -296,4 +296,4 @@ const api = {
     }),
 };
 
-module.exports = { api, getAuthToken, getAuthUser, API_URL };
+export { api, getAuthToken, getAuthUser, API_URL };
