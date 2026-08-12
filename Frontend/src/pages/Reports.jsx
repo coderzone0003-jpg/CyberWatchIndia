@@ -21,6 +21,7 @@ function Reports() {
     fetchReportData();
     fetchCategories();
     fetchOfficers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const fetchCategories = async () => {

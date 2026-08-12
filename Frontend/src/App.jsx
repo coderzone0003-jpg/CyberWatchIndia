@@ -6,7 +6,6 @@ import ProtectedRoute, { clearAuthVerifyCache } from './components/ProtectedRout
 import AdminLayout from './components/AdminLayout';
 import Notification from './components/Notification';
 import ErrorBoundary from './components/ErrorBoundary';
-import ErrorTest from './components/ErrorTest';
 import Home from './pages/Home';
 import AboutPage from './pages/About';
 import ReportCrime from './pages/ReportCrime';

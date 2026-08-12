@@ -4,11 +4,9 @@ const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  const message = 'Missing REACT_APP_SUPABASE_URL or REACT_APP_SUPABASE_ANON_KEY';
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error(`${message}. Set these in Vercel environment variables before building.`);
-  }
-  console.error(`WARNING: ${message}`);
+  console.error(
+    'WARNING: Missing REACT_APP_SUPABASE_URL or REACT_APP_SUPABASE_ANON_KEY. Set them in Vercel environment variables.'
+  );
 }
 
 export const supabase = createClient(
