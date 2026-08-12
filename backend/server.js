@@ -12,10 +12,40 @@ const { sanitizeRequest } = require('./middleware/validation');
 
 dotenv.config();
 
+const PRODUCTION_FRONTEND_URL = 'https://cyber-watch-india-gilt.vercel.app';
+
+function isLocalhostUrl(url) {
+  return /localhost|127\.0\.0\.1/i.test(url || '');
+}
+
+function resolveFrontendUrl() {
+  const configured = (process.env.FRONTEND_URL || '').trim().replace(/\/$/, '');
+
+  if (configured && !isLocalhostUrl(configured)) {
+    return configured;
+  }
+
+  if (process.env.RENDER === 'true') {
+    console.warn(
+      `Using production frontend URL on Render: ${PRODUCTION_FRONTEND_URL}` +
+        (configured ? ` (configured FRONTEND_URL was ${configured})` : '')
+    );
+    return PRODUCTION_FRONTEND_URL;
+  }
+
+  return configured || 'http://localhost:3000';
+}
+
+if (process.env.RENDER === 'true' && process.env.NODE_ENV !== 'production') {
+  console.warn('Render detected with NODE_ENV!=production; forcing production mode.');
+  process.env.NODE_ENV = 'production';
+}
+
+process.env.FRONTEND_URL = resolveFrontendUrl();
+
 function getAllowedOrigins() {
   const origins = new Set();
-  const frontendUrl = (process.env.FRONTEND_URL || '').trim().replace(/\/$/, '');
-  if (frontendUrl) origins.add(frontendUrl);
+  origins.add(process.env.FRONTEND_URL);
 
   (process.env.ALLOWED_ORIGINS || '')
     .split(',')

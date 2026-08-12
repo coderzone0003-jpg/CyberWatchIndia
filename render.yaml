@@ -2,7 +2,7 @@
 # Developer: MR SHUBHAM BHOJANE
 services:
   - type: web
-    name: cyberwatch-backend
+    name: cyberwatchindia-backend
     runtime: node
     rootDir: backend
     plan: free
@@ -13,7 +13,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
-        sync: false
+        value: https://cyber-watch-india-gilt.vercel.app
+      - key: ALLOWED_ORIGINS
+        value: https://cyber-watch-india-gilt.vercel.app,https://cyber-watch-india.vercel.app
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
