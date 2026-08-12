@@ -33,89 +33,209 @@ import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import './App.css';
 import { API_URL } from './utils/apiConfig';
+import {
+  AUTH_SCOPES,
+  clearAdminSession,
+  clearUserSession,
+  getAuthPair,
+  migrateLegacyAuth,
+  setAdminSession,
+  setUserSession,
+} from './utils/authStorage';
 
 function AppContent() {
-  const [authUser, setAuthUser] = useState(null);
-  const [authToken, setAuthToken] = useState(null);
+  const [userAuth, setUserAuth] = useState(null);
+  const [adminAuth, setAdminAuth] = useState(null);
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
-    // Check for stored authentication data on mount
-    const storedToken = localStorage.getItem('cyberAuthToken');
-    const storedUser = localStorage.getItem('cyberAuthUser');
-    
-    if (storedToken && storedUser) {
-      setAuthToken(storedToken);
-      setAuthUser(JSON.parse(storedUser));
+    migrateLegacyAuth();
+
+    const userSession = getAuthPair(AUTH_SCOPES.USER);
+    const adminSession = getAuthPair(AUTH_SCOPES.ADMIN);
+
+    if (userSession) {
+      setUserAuth(userSession);
+    }
+
+    if (adminSession) {
+      setAdminAuth(adminSession);
     }
   }, []);
 
   const clearNotice = useCallback(() => setNotice(''), []);
 
-  const handleLogin = (user, token) => {
-    localStorage.setItem('cyberAuthToken', token);
-    localStorage.setItem('cyberAuthUser', JSON.stringify(user));
-    setAuthToken(token);
-    setAuthUser(user);
+  const handleUserLogin = (user, token) => {
+    setUserSession(user, token);
+    setUserAuth({ user, token });
+    setNotice(`Welcome back, ${user.full_name || user.email}`);
+  };
+
+  const handleAdminLogin = (user, token) => {
+    setAdminSession(user, token);
+    setAdminAuth({ user, token });
     setNotice(`Welcome back, ${user.full_name || user.email}`);
   };
 
   const handleUserVerified = useCallback((user) => {
-    setAuthUser(user);
+    setUserAuth((current) => (current ? { ...current, user } : current));
   }, []);
 
-  const handleLogout = async () => {
+  const handleAdminVerified = useCallback((user) => {
+    setAdminAuth((current) => (current ? { ...current, user } : current));
+  }, []);
+
+  const logoutScope = async (scope, token, clearState) => {
     try {
-      // Call logout endpoint to invalidate token on server
-      if (authToken) {
+      if (token) {
         await fetch(`${API_URL}/api/auth/logout`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
+            Authorization: `Bearer ${token}`,
           },
         });
       }
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
-      clearAuthVerifyCache();
-      // Clear local storage regardless of API call success
-      localStorage.removeItem('cyberAuthToken');
-      localStorage.removeItem('cyberAuthUser');
-      setAuthToken(null);
-      setAuthUser(null);
-      setNotice('You have been logged out.');
+      clearAuthVerifyCache(scope);
+      clearState();
     }
+  };
+
+  const handleUserLogout = async () => {
+    const token = userAuth?.token;
+    await logoutScope(AUTH_SCOPES.USER, token, () => {
+      clearUserSession();
+      setUserAuth(null);
+      setNotice('You have been logged out.');
+    });
+  };
+
+  const handleAdminLogout = async () => {
+    const token = adminAuth?.token;
+    await logoutScope(AUTH_SCOPES.ADMIN, token, () => {
+      clearAdminSession();
+      setAdminAuth(null);
+    });
   };
 
   return (
     <div className="App">
-      <Navbar authUser={authUser} onLogout={handleLogout} />
+      <Navbar authUser={userAuth?.user || null} onLogout={handleUserLogout} />
       <Notification message={notice} type="success" onClose={clearNotice} autoHideMs={5000} />
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/report" element={<ProtectedRoute authUser={authUser} authToken={authToken} onUserVerified={handleUserVerified}><ReportCrime /></ProtectedRoute>} />
-          <Route path="/track" element={<ProtectedRoute authUser={authUser} authToken={authToken} onUserVerified={handleUserVerified}><TrackComplaint /></ProtectedRoute>} />
+          <Route
+            path="/report"
+            element={
+              <ProtectedRoute
+                authScope={AUTH_SCOPES.USER}
+                authUser={userAuth?.user}
+                authToken={userAuth?.token}
+                onUserVerified={handleUserVerified}
+              >
+                <ReportCrime />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/track"
+            element={
+              <ProtectedRoute
+                authScope={AUTH_SCOPES.USER}
+                authUser={userAuth?.user}
+                authToken={userAuth?.token}
+                onUserVerified={handleUserVerified}
+              >
+                <TrackComplaint />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/safety" element={<SafetyTipsPage />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/contact" element={<ContactPage />} />
-          <Route path="/login" element={<LoginPage onLogin={handleLogin} onLogout={handleLogout} />} />
-          <Route path="/register" element={<RegisterPage onRegister={handleLogin} />} />
+          <Route
+            path="/login"
+            element={
+              <LoginPage
+                onUserLogin={handleUserLogin}
+                onAdminLogin={handleAdminLogin}
+              />
+            }
+          />
+          <Route path="/register" element={<RegisterPage onRegister={handleUserLogin} />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/dashboard" element={<ProtectedRoute authUser={authUser} authToken={authToken} onUserVerified={handleUserVerified}><UserDashboard /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute authUser={authUser} authToken={authToken} onUserVerified={handleUserVerified}><Profile /></ProtectedRoute>} />
-          <Route path="/my-complaints" element={<ProtectedRoute authUser={authUser} authToken={authToken} onUserVerified={handleUserVerified}><MyComplaints /></ProtectedRoute>} />
-          <Route path="/complaint-details" element={<ProtectedRoute authUser={authUser} authToken={authToken} onUserVerified={handleUserVerified}><ComplaintDetails /></ProtectedRoute>} />
-          <Route element={
-            <ProtectedRoute authUser={authUser} authToken={authToken} allowedRoles={['admin']} onUserVerified={handleUserVerified}>
-              <AdminLayout onLogout={handleLogout} />
-            </ProtectedRoute>
-          }>
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute
+                authScope={AUTH_SCOPES.USER}
+                authUser={userAuth?.user}
+                authToken={userAuth?.token}
+                onUserVerified={handleUserVerified}
+              >
+                <UserDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute
+                authScope={AUTH_SCOPES.USER}
+                authUser={userAuth?.user}
+                authToken={userAuth?.token}
+                onUserVerified={handleUserVerified}
+              >
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-complaints"
+            element={
+              <ProtectedRoute
+                authScope={AUTH_SCOPES.USER}
+                authUser={userAuth?.user}
+                authToken={userAuth?.token}
+                onUserVerified={handleUserVerified}
+              >
+                <MyComplaints />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/complaint-details"
+            element={
+              <ProtectedRoute
+                authScope={AUTH_SCOPES.USER}
+                authUser={userAuth?.user}
+                authToken={userAuth?.token}
+                onUserVerified={handleUserVerified}
+              >
+                <ComplaintDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            element={
+              <ProtectedRoute
+                authScope={AUTH_SCOPES.ADMIN}
+                authUser={adminAuth?.user}
+                authToken={adminAuth?.token}
+                allowedRoles={['admin']}
+                onUserVerified={handleAdminVerified}
+              >
+                <AdminLayout onLogout={handleAdminLogout} />
+              </ProtectedRoute>
+            }
+          >
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="manage-complaints" element={<ManageComplaints />} />
             <Route path="manage-users" element={<ManageUsers />} />
@@ -128,7 +248,7 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      <Footer authUser={authUser} />
+      <Footer authUser={userAuth?.user || null} />
     </div>
   );
 }

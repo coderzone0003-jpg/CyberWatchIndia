@@ -8,12 +8,13 @@ import SafetyTips from '../components/SafetyTips';
 import Statistics from '../components/Statistics';
 import FAQ from '../components/FAQ';
 import Contact from '../components/Contact';
+import { getUserToken } from '../utils/authStorage';
 
 function Home() {
   const navigate = useNavigate();
   
   const handleReportClick = () => {
-    const token = localStorage.getItem('cyberAuthToken');
+    const token = getUserToken();
     if (token) {
       navigate('/report');
     } else {
@@ -22,7 +23,7 @@ function Home() {
   };
 
   const handleTrackClick = () => {
-    const token = localStorage.getItem('cyberAuthToken');
+    const token = getUserToken();
     if (token) {
       navigate('/track');
     } else {

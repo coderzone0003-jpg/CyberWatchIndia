@@ -74,7 +74,7 @@ function Navbar({ authUser, onLogout }) {
                     <Notifications authUser={authUser} />
                   </li>
                   <li className="nav-item mt-2 mt-lg-0">
-                    <NavLink className="btn btn-outline-success btn-sm w-100 w-lg-auto" to={String(authUser.role || '').toLowerCase() === 'admin' ? '/admin' : '/dashboard'}>Dashboard</NavLink>
+                    <NavLink className="btn btn-outline-success btn-sm w-100 w-lg-auto" to="/dashboard">Dashboard</NavLink>
                   </li>
                   <li className="nav-item mt-2 mt-lg-0">
                     <button className="btn btn-outline-danger btn-sm w-100 w-lg-auto" onClick={onLogout}>Logout</button>

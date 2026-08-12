@@ -2,8 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { api } from '../utils/api';
 import { clearAuthVerifyCache } from '../components/ProtectedRoute';
+import {
+  clearAdminSession,
+  clearUserSession,
+  getAdminToken,
+  setAdminSession,
+  setUserSession,
+} from '../utils/authStorage';
 
-function LoginPage({ onLogin }) {
+function LoginPage({ onUserLogin, onAdminLogin }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
@@ -19,17 +26,9 @@ function LoginPage({ onLogin }) {
       setError(redirectMessage);
     }
 
-    const token = localStorage.getItem('cyberAuthToken');
-    const user = localStorage.getItem('cyberAuthUser');
-    if (token && user) {
-      try {
-        const parsed = JSON.parse(user);
-        if (String(parsed.role || '').toLowerCase() === 'admin') {
-          navigate('/admin', { replace: true });
-        }
-      } catch {
-        // ignore invalid stored user
-      }
+    const adminToken = getAdminToken();
+    if (adminToken) {
+      navigate('/admin', { replace: true });
     }
   }, [navigate, location.state]);
 
@@ -84,19 +83,22 @@ function LoginPage({ onLogin }) {
         form.password.trim()
       );
 
-      localStorage.setItem('cyberAuthToken', loginData.token);
+      const profileData = await api.getCurrentUser(null, loginData.token);
+      const user = profileData.user;
+      const role = String(user.role || '').toLowerCase();
 
-      const profileData = await api.getCurrentUser();
-      localStorage.setItem('cyberAuthUser', JSON.stringify(profileData.user));
-
-      onLogin(profileData.user, loginData.token);
-
-      const role = String(profileData.user.role || '').toLowerCase();
       if (role === 'admin') {
+        clearUserSession();
+        setAdminSession(user, loginData.token);
+        onAdminLogin(user, loginData.token);
         navigate('/admin', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
+        return;
       }
+
+      clearAdminSession();
+      setUserSession(user, loginData.token);
+      onUserLogin(user, loginData.token);
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       let message = err.message || 'Login failed. Please check your credentials.';
 
@@ -113,7 +115,8 @@ function LoginPage({ onLogin }) {
       }
 
       setError(message);
-      localStorage.removeItem('cyberAuthToken');
+      clearUserSession();
+      clearAdminSession();
     } finally {
       setLoading(false);
     }

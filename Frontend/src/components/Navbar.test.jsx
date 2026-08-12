@@ -14,8 +14,8 @@ describe('Navbar Component', () => {
     );
 
     expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText('Report Crime')).toBeInTheDocument();
-    expect(screen.getByText('Track Complaint')).toBeInTheDocument();
+    expect(screen.queryByText('Report Crime')).not.toBeInTheDocument();
+    expect(screen.queryByText('Track Complaint')).not.toBeInTheDocument();
     expect(screen.getByText('Login')).toBeInTheDocument();
     expect(screen.getByText('Register')).toBeInTheDocument();
   });
@@ -35,18 +35,17 @@ describe('Navbar Component', () => {
     expect(screen.queryByText('Login')).not.toBeInTheDocument();
   });
 
-  test('renders dashboard link when authenticated as admin', () => {
+  test('public navbar always links dashboard to user dashboard', () => {
     render(
       <BrowserRouter>
-        <Navbar 
-          authUser={{ role: 'admin', name: 'Admin User' }} 
-          onLogout={mockLogout} 
+        <Navbar
+          authUser={{ role: 'user', name: 'Test User' }}
+          onLogout={mockLogout}
         />
       </BrowserRouter>
     );
 
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Logout')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard').closest('a')).toHaveAttribute('href', '/dashboard');
   });
 
   test('calls logout function when logout button is clicked', () => {

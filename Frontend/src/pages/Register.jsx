@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { supabase } from '../config/supabase';
 import { sanitizeMobileInput, validateIndianMobile } from '../utils/phoneValidation';
+import { clearUserSession, setUserSession } from '../utils/authStorage';
 
 function RegisterPage({ onRegister }) {
   const navigate = useNavigate();
@@ -145,12 +146,9 @@ function RegisterPage({ onRegister }) {
         session = loginData.session;
       }
 
-      // Save token and login user automatically
-      localStorage.setItem('cyberAuthToken', session.access_token);
-
       let profileUser;
       try {
-        const profileData = await api.getCurrentUser();
+        const profileData = await api.getCurrentUser(null, session.access_token);
         profileUser = profileData.user;
       } catch (profileErr) {
         profileUser = {
@@ -162,12 +160,12 @@ function RegisterPage({ onRegister }) {
         };
       }
 
-      localStorage.setItem('cyberAuthUser', JSON.stringify(profileUser));
+      setUserSession(profileUser, session.access_token);
       onRegister(profileUser, session.access_token);
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
-      localStorage.removeItem('cyberAuthToken');
+      clearUserSession();
     } finally {
       setLoading(false);
     }

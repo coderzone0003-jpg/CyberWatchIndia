@@ -1,29 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { API_URL } from '../utils/apiConfig';
+import {
+  AUTH_SCOPES,
+  clearSession,
+  getSession,
+  getToken,
+  setSession,
+} from '../utils/authStorage';
+
 const AUTH_VERIFY_TTL_MS = 60 * 1000;
 
-let authVerifyCache = { token: null, user: null, expiresAt: 0 };
-let pendingVerification = null;
-
-const getStoredUser = () => {
-  try {
-    const raw = localStorage.getItem('cyberAuthUser');
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+const authVerifyCaches = {
+  [AUTH_SCOPES.USER]: { token: null, user: null, expiresAt: 0 },
+  [AUTH_SCOPES.ADMIN]: { token: null, user: null, expiresAt: 0 },
 };
 
-const verifyAuthToken = async (token) => {
-  const now = Date.now();
+const pendingVerifications = {
+  [AUTH_SCOPES.USER]: null,
+  [AUTH_SCOPES.ADMIN]: null,
+};
 
-  if (authVerifyCache.token === token && authVerifyCache.expiresAt > now) {
-    return authVerifyCache.user;
+const verifyAuthToken = async (token, scope) => {
+  const now = Date.now();
+  const cache = authVerifyCaches[scope];
+
+  if (cache.token === token && cache.expiresAt > now) {
+    return cache.user;
   }
 
-  if (pendingVerification?.token === token) {
-    return pendingVerification.promise;
+  if (pendingVerifications[scope]?.token === token) {
+    return pendingVerifications[scope].promise;
   }
 
   const promise = (async () => {
@@ -38,43 +45,56 @@ const verifyAuthToken = async (token) => {
     }
 
     const data = await response.json();
-    authVerifyCache = {
+    authVerifyCaches[scope] = {
       token,
       user: data.user,
       expiresAt: Date.now() + AUTH_VERIFY_TTL_MS,
     };
-    localStorage.setItem('cyberAuthUser', JSON.stringify(data.user));
+    setSession(scope, data.user, token);
     return data.user;
   })();
 
-  pendingVerification = { token, promise };
+  pendingVerifications[scope] = { token, promise };
 
   try {
     return await promise;
   } finally {
-    if (pendingVerification?.promise === promise) {
-      pendingVerification = null;
+    if (pendingVerifications[scope]?.promise === promise) {
+      pendingVerifications[scope] = null;
     }
   }
 };
 
-export const clearAuthVerifyCache = () => {
-  authVerifyCache = { token: null, user: null, expiresAt: 0 };
-  pendingVerification = null;
+export const clearAuthVerifyCache = (scope) => {
+  if (scope) {
+    authVerifyCaches[scope] = { token: null, user: null, expiresAt: 0 };
+    pendingVerifications[scope] = null;
+    return;
+  }
+
+  clearAuthVerifyCache(AUTH_SCOPES.USER);
+  clearAuthVerifyCache(AUTH_SCOPES.ADMIN);
 };
 
-function ProtectedRoute({ children, authUser, authToken, allowedRoles = [], onUserVerified }) {
+function ProtectedRoute({
+  children,
+  authScope = AUTH_SCOPES.USER,
+  authUser,
+  authToken,
+  allowedRoles = [],
+  onUserVerified,
+}) {
   const [verifiedUser, setVerifiedUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const effectiveToken = authToken || localStorage.getItem('cyberAuthToken');
-  const effectiveUser = authUser || getStoredUser();
+  const effectiveToken = authToken || getToken(authScope);
+  const effectiveUser = authUser || getSession(authScope);
 
   useEffect(() => {
     let cancelled = false;
 
     const verifyToken = async () => {
-      const token = authToken || localStorage.getItem('cyberAuthToken');
+      const token = authToken || getToken(authScope);
 
       if (!token) {
         if (!cancelled) setIsLoading(false);
@@ -82,15 +102,14 @@ function ProtectedRoute({ children, authUser, authToken, allowedRoles = [], onUs
       }
 
       try {
-        const user = await verifyAuthToken(token);
+        const user = await verifyAuthToken(token, authScope);
         if (cancelled) return;
         setVerifiedUser(user);
         onUserVerified?.(user);
       } catch (err) {
         console.error('Token verification failed:', err);
-        clearAuthVerifyCache();
-        localStorage.removeItem('cyberAuthToken');
-        localStorage.removeItem('cyberAuthUser');
+        clearAuthVerifyCache(authScope);
+        clearSession(authScope);
         if (!cancelled) setVerifiedUser(null);
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -102,7 +121,7 @@ function ProtectedRoute({ children, authUser, authToken, allowedRoles = [], onUs
     return () => {
       cancelled = true;
     };
-  }, [authToken, onUserVerified]);
+  }, [authToken, authScope, onUserVerified]);
 
   if (isLoading) {
     return (
@@ -117,29 +136,23 @@ function ProtectedRoute({ children, authUser, authToken, allowedRoles = [], onUs
     );
   }
 
-  const activeUser = allowedRoles.length > 0 ? verifiedUser : (verifiedUser || effectiveUser);
+  const activeUser = allowedRoles.length > 0 ? verifiedUser : verifiedUser || effectiveUser;
 
   if (!activeUser || !effectiveToken) {
     return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles.length && !allowedRoles.includes(String(activeUser.role || '').toLowerCase())) {
-    const needsAdmin = allowedRoles.includes('admin');
-    const isRegularUser = String(activeUser.role || '').toLowerCase() === 'user';
-
-    if (needsAdmin && isRegularUser) {
-      clearAuthVerifyCache();
-      localStorage.removeItem('cyberAuthToken');
-      localStorage.removeItem('cyberAuthUser');
-    }
+    clearAuthVerifyCache(authScope);
+    clearSession(authScope);
 
     return (
       <Navigate
         to="/login"
         replace
         state={{
-          message: needsAdmin
-            ? 'You are logged in as a regular user. Sign in with an admin account to continue.'
+          message: allowedRoles.includes('admin')
+            ? 'Sign in with an admin account to continue.'
             : 'You do not have permission to view this page.',
         }}
       />

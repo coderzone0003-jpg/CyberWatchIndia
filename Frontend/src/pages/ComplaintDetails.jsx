@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../utils/api';
 import { getAssignedOfficer } from '../utils/officerDisplay';
+import { getUserSession } from '../utils/authStorage';
 
 function ComplaintDetails() {
   const [searchParams] = useSearchParams();
@@ -14,9 +15,9 @@ function ComplaintDetails() {
   const [authUser, setAuthUser] = useState(null);
 
   useEffect(() => {
-    const user = localStorage.getItem('cyberAuthUser');
+    const user = getUserSession();
     if (user) {
-      setAuthUser(JSON.parse(user));
+      setAuthUser(user);
     }
   }, []);
 

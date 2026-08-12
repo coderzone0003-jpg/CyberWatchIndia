@@ -1,5 +1,12 @@
 import { clearAuthVerifyCache } from '../components/ProtectedRoute';
 import { API_URL, IS_PRODUCTION_HOST } from './apiConfig';
+import {
+  AUTH_SCOPES,
+  clearSession,
+  getSession,
+  getToken,
+  resolveAuthScope,
+} from './authStorage';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -32,22 +39,38 @@ const buildQueryString = (filters = {}) => {
 };
 
 /**
- * Get the auth token from localStorage
+ * Get the auth token for the active request scope.
  */
-const getAuthToken = () => {
-  return localStorage.getItem('cyberAuthToken');
+const getAuthToken = (authScope, tokenOverride) => {
+  if (tokenOverride) {
+    return tokenOverride;
+  }
+
+  const scope = authScope || resolveAuthScope();
+  return getToken(scope);
 };
 
 /**
- * Get the auth user from localStorage
+ * Get the stored session user for a scope.
  */
-const getAuthUser = () => {
-  const user = localStorage.getItem('cyberAuthUser');
-  return user ? JSON.parse(user) : null;
+const getAuthUser = (authScope = AUTH_SCOPES.USER) => {
+  return getSession(authScope);
 };
 
-const downloadAuthenticatedFile = async (endpoint, filename) => {
-  const token = getAuthToken();
+const clearAuthForScope = (authScope) => {
+  clearSession(authScope);
+  clearAuthVerifyCache(authScope);
+};
+
+const redirectToLogin = () => {
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login';
+  }
+};
+
+const downloadAuthenticatedFile = async (endpoint, filename, authScope) => {
+  const scope = authScope || resolveAuthScope(endpoint);
+  const token = getAuthToken(scope);
   const response = await fetch(`${API_URL}${endpoint}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     cache: 'no-store',
@@ -77,15 +100,22 @@ const downloadAuthenticatedFile = async (endpoint, filename) => {
  * Make an authenticated API request
  */
 const apiRequest = async (endpoint, options = {}) => {
+  const {
+    authScope = null,
+    tokenOverride = null,
+    ...fetchOptions
+  } = options;
+
   const isPublicAuth = endpoint === '/api/auth/login' || endpoint === '/api/auth/register';
-  const token = isPublicAuth ? null : getAuthToken();
+  const scope = authScope || resolveAuthScope(endpoint);
+  const token = isPublicAuth ? null : getAuthToken(scope, tokenOverride);
   
   const headers = {
-    ...options.headers,
+    ...fetchOptions.headers,
   };
 
   // Only set Content-Type for non-FormData requests
-  if (!(options.body instanceof FormData)) {
+  if (!(fetchOptions.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -94,7 +124,7 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 
   const config = {
-    ...options,
+    ...fetchOptions,
     headers,
     cache: 'no-store',
   };
@@ -104,14 +134,8 @@ const apiRequest = async (endpoint, options = {}) => {
     
     // Handle 401 Unauthorized - token expired or invalid
     if (response.status === 401 && !endpoint.includes('/auth/login')) {
-      // Clear auth data
-      localStorage.removeItem('cyberAuthToken');
-      localStorage.removeItem('cyberAuthUser');
-      
-      // Redirect to login if not already there
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+      clearAuthForScope(scope);
+      redirectToLogin();
       
       throw new Error('Authentication required. Please login again.');
     }
@@ -145,12 +169,8 @@ const apiRequest = async (endpoint, options = {}) => {
       if (response.status === 403 && errorMessage.includes('Insufficient permissions')) {
         const currentRole = String(data?.current_role || '').toLowerCase();
         if (currentRole === 'user' && endpoint.includes('/api/admin')) {
-          clearAuthVerifyCache();
-          localStorage.removeItem('cyberAuthToken');
-          localStorage.removeItem('cyberAuthUser');
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-          }
+          clearAuthForScope(AUTH_SCOPES.ADMIN);
+          redirectToLogin();
         }
         throw new Error(
           `Insufficient permissions (your role: ${data?.current_role || 'unknown'}). Admin login required.`
@@ -192,13 +212,14 @@ const api = {
       body: JSON.stringify(userData),
     }),
 
-  logout: () => 
+  logout: (authScope) =>
     apiRequest('/api/auth/logout', {
       method: 'POST',
+      authScope,
     }),
 
-  getCurrentUser: () => 
-    apiRequest('/api/auth/me'),
+  getCurrentUser: (authScope, tokenOverride) =>
+    apiRequest('/api/auth/me', { authScope, tokenOverride }),
 
   getPasswordRequirements: () => 
     fetch(`${API_URL}/api/auth/password-requirements`).then(res => res.json()),
@@ -289,13 +310,15 @@ const api = {
   exportPDF: (filters = {}) =>
     downloadAuthenticatedFile(
       `/api/admin/export/pdf${buildQueryString(filters)}`,
-      `complaints-report-${Date.now()}.pdf`
+      `complaints-report-${Date.now()}.pdf`,
+      AUTH_SCOPES.ADMIN
     ),
 
   exportExcel: (filters = {}) =>
     downloadAuthenticatedFile(
       `/api/admin/export/excel${buildQueryString(filters)}`,
-      `complaints-report-${Date.now()}.xlsx`
+      `complaints-report-${Date.now()}.xlsx`,
+      AUTH_SCOPES.ADMIN
     ),
 
   getAuditLogs: (filters = {}) =>
