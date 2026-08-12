@@ -160,10 +160,13 @@ app.get('/', (req, res) => {
 
 // Basic health check that doesn't require database
 app.get('/ping', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     message: 'Server is running',
-    timestamp: new Date().toISOString()
+    environment: process.env.NODE_ENV || 'development',
+    frontend_url: process.env.FRONTEND_URL,
+    allowed_origins: allowedOrigins,
+    timestamp: new Date().toISOString(),
   });
 });
 
