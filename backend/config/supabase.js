@@ -1,5 +1,11 @@
 const { createClient } = require('@supabase/supabase-js');
+const WebSocket = require('ws');
 require('dotenv').config();
+
+// Supabase Realtime needs WebSocket; Node 20 and below require the ws polyfill.
+if (typeof globalThis.WebSocket === 'undefined') {
+  globalThis.WebSocket = WebSocket;
+}
 
 // Supabase client configuration
 const supabaseUrl = process.env.SUPABASE_URL;

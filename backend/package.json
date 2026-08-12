@@ -22,7 +22,7 @@
   "author": "Shubham Bhojane, Vinanti Bendure, Darshan Seleke, Chaitrali Karale",
   "license": "ISC",
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -41,7 +41,8 @@
     "pdfkit": "^0.19.1",
     "pg": "^8.23.0",
     "resend": "^6.18.1",
-    "validator": "^13.11.0"
+    "validator": "^13.11.0",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
