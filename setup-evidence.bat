@@ -1,5 +1,5 @@
 @echo off
-REM Developer: MR SHUBHAM BHOJANE
+REM Developers: Shubham Bhojane, Vinanti Bendure, Darshan Seleke, Chaitrali Karale
 setlocal
 cd /d "%~dp0backend"
 

@@ -1,5 +1,5 @@
 # Render deployment — Cyber Crime Portal backend
-# Developer: MR SHUBHAM BHOJANE
+# Developers: Shubham Bhojane, Vinanti Bendure, Darshan Seleke, Chaitrali Karale
 services:
   - type: web
     name: cyberwatchindia-backend

@@ -59,9 +59,12 @@ npm start
 
 For detailed setup instructions, API documentation, deployment guides, and troubleshooting, please refer to [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md).
 
-## Developer
+## Developers
 
-**MR SHUBHAM BHOJANE**
+1. **Shubham Bhojane**
+2. **Vinanti Bendure**
+3. **Darshan Seleke**
+4. **Chaitrali Karale**
 
 ---
 

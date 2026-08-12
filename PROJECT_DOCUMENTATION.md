@@ -1201,9 +1201,12 @@ scripts\validate-env.bat
 
 ---
 
-## Developer
+## Developers
 
-**MR SHUBHAM BHOJANE**
+1. **Shubham Bhojane**
+2. **Vinanti Bendure**
+3. **Darshan Seleke**
+4. **Chaitrali Karale**
 
 ---
 

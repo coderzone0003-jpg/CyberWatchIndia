@@ -32,8 +32,7 @@ import AuditLogs from './pages/AuditLogs';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import './App.css';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import { API_URL } from './utils/apiConfig';
 
 function AppContent() {
   const [authUser, setAuthUser] = useState(null);

@@ -1,6 +1,6 @@
 /**
  * Cyber Crime Portal API Server
- * Developer: MR SHUBHAM BHOJANE
+ * Developers: Shubham Bhojane, Vinanti Bendure, Darshan Seleke, Chaitrali Karale
  */
 const express = require('express');
 const cors = require('cors');
@@ -13,6 +13,11 @@ const { sanitizeRequest } = require('./middleware/validation');
 dotenv.config();
 
 const PRODUCTION_FRONTEND_URL = 'https://cyber-watch-india-gilt.vercel.app';
+const PRODUCTION_ORIGINS = [
+  PRODUCTION_FRONTEND_URL,
+  'https://cyber-watch-india.vercel.app',
+  'https://cyber-watch-india-git-main-coderzone0003-jpg.vercel.app',
+];
 
 function isLocalhostUrl(url) {
   return /localhost|127\.0\.0\.1/i.test(url || '');
@@ -47,6 +52,8 @@ function getAllowedOrigins() {
   const origins = new Set();
   origins.add(process.env.FRONTEND_URL);
 
+  PRODUCTION_ORIGINS.forEach((origin) => origins.add(origin));
+
   (process.env.ALLOWED_ORIGINS || '')
     .split(',')
     .map((value) => value.trim().replace(/\/$/, ''))
@@ -59,6 +66,34 @@ function getAllowedOrigins() {
   }
 
   return [...origins];
+}
+
+function isAllowedOrigin(origin, allowed = allowedOrigins) {
+  if (!origin) return true;
+  if (allowed.includes(origin)) return true;
+  if (/^https:\/\/cyber-watch-india[a-z0-9-]*\.vercel\.app$/i.test(origin)) return true;
+  return false;
+}
+
+function applyCorsHeaders(req, res, allowed = allowedOrigins) {
+  const origin = req.headers.origin;
+
+  if (origin && isAllowedOrigin(origin, allowed)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+  }
+
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET, POST, PUT, DELETE, PATCH, OPTIONS'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, x-auth-token, Authorization'
+  );
+  res.setHeader('Access-Control-Expose-Headers', 'x-auth-token');
+  res.setHeader('Access-Control-Max-Age', '3600');
 }
 
 // Validate required environment variables
@@ -96,12 +131,41 @@ if (process.env.NODE_ENV === 'production') {
   }
 }
 
+// CORS must run before helmet so preflight gets Access-Control headers
+const allowedOrigins = getAllowedOrigins();
+const corsOptions = {
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin, allowedOrigins)) {
+      callback(null, true);
+      return;
+    }
+    console.warn('CORS blocked origin:', origin, 'Allowed:', allowedOrigins);
+    callback(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-auth-token', 'Authorization'],
+  exposedHeaders: ['x-auth-token'],
+  maxAge: 3600,
+};
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
+
+app.use((req, res, next) => {
+  applyCorsHeaders(req, res, allowedOrigins);
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Security middleware
 app.use(helmetConfig);
@@ -114,25 +178,6 @@ if (process.env.NODE_ENV === 'production') {
   // Dev log format for development
   app.use(morgan('dev'));
 }
-
-// CORS configuration - allow frontend origin(s)
-const allowedOrigins = getAllowedOrigins();
-const corsOptions = {
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-      return;
-    }
-    callback(null, false);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'x-auth-token', 'Authorization'],
-  exposedHeaders: ['x-auth-token'],
-  maxAge: 3600,
-};
-
-app.use(cors(corsOptions));
 
 // Prevent stale cached API responses (fixes assigned officer not appearing after update)
 app.use('/api', (req, res, next) => {

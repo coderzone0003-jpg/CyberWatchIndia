@@ -1,6 +1,24 @@
 import { clearAuthVerifyCache } from '../components/ProtectedRoute';
+import { API_URL, IS_PRODUCTION_HOST } from './apiConfig';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const fetchWithRetry = async (url, config, retries = IS_PRODUCTION_HOST ? 2 : 0) => {
+  let lastError;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await fetch(url, config);
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries) {
+        await sleep(2500 * (attempt + 1));
+      }
+    }
+  }
+
+  throw lastError;
+};
 
 const buildQueryString = (filters = {}) => {
   const params = new URLSearchParams();
@@ -82,7 +100,7 @@ const apiRequest = async (endpoint, options = {}) => {
   };
 
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, config);
+    const response = await fetchWithRetry(`${API_URL}${endpoint}`, config);
     
     // Handle 401 Unauthorized - token expired or invalid
     if (response.status === 401 && !endpoint.includes('/auth/login')) {
@@ -147,7 +165,10 @@ const apiRequest = async (endpoint, options = {}) => {
     console.error('API request error:', error);
 
     if (error.message === 'Failed to fetch' || error.message === 'fetch failed') {
-      throw new Error(`Cannot reach the server. Make sure the backend is running at ${API_URL}`);
+      const target = API_URL || window.location.origin;
+      throw new Error(
+        `Cannot reach the server. Make sure the backend is running at ${target}. Start it with: cd backend && npm run dev`
+      );
     }
 
     throw error;

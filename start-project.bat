@@ -10,7 +10,7 @@ REM    1) Check Node.js / npm
 REM    2) Setup .env files (if missing)
 REM    3) Install backend + frontend dependencies
 REM    4) Start backend (5000) and frontend (3000) servers
-REM  Developer: MR SHUBHAM BHOJANE
+REM  Developers: Shubham Bhojane, Vinanti Bendure, Darshan Seleke, Chaitrali Karale
 REM ============================================================
 
 set "ROOT=%~dp0"

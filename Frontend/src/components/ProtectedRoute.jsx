@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import { API_URL } from '../utils/apiConfig';
 const AUTH_VERIFY_TTL_MS = 60 * 1000;
 
 let authVerifyCache = { token: null, user: null, expiresAt: 0 };

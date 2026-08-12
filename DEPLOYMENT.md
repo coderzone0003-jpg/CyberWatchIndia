@@ -107,4 +107,4 @@ Then log in on the live site with `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
 ---
 
-**Developer:** MR SHUBHAM BHOJANE
+**Developers:** Shubham Bhojane, Vinanti Bendure, Darshan Seleke, Chaitrali Karale

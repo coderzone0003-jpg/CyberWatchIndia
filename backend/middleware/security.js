@@ -84,7 +84,8 @@ const helmetConfig = helmet({
       frameSrc: ["'none'"],
     },
   },
-  crossOriginEmbedderPolicy: false, // May need to be false for certain frontend setups
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   hsts: {
     maxAge: 31536000, // 1 year
     includeSubDomains: true,
