@@ -106,10 +106,13 @@ const sanitizers = {
   sanitizeObject: (obj) => {
     if (!obj || typeof obj !== 'object') return obj;
     
+    const skipEscapeKeys = new Set(['officer_id', 'officerId', 'category_id', 'user_id', 'complaint_id', 'id']);
     const sanitized = {};
     for (const key in obj) {
       if (typeof obj[key] === 'string') {
-        sanitized[key] = validator.escape(obj[key].trim());
+        sanitized[key] = skipEscapeKeys.has(key)
+          ? obj[key].trim()
+          : validator.escape(obj[key].trim());
       } else if (typeof obj[key] === 'object') {
         sanitized[key] = sanitizers.sanitizeObject(obj[key]);
       } else {
@@ -171,31 +174,68 @@ const validationRules = {
       .trim()
       .notEmpty().withMessage('Title is required')
       .isLength({ min: 10, max: 255 }).withMessage('Title must be between 10 and 255 characters')
+      .custom((value) => {
+        if (/^[\W\d_]+$/.test(value.trim())) {
+          throw new Error('Title must contain descriptive text, not only symbols or numbers');
+        }
+        return true;
+      })
       .escape(),
     
     body('description')
       .trim()
       .notEmpty().withMessage('Description is required')
       .isLength({ min: 20, max: 5000 }).withMessage('Description must be between 20 and 5000 characters')
+      .custom((value) => {
+        const uniqueWords = value.trim().split(/\s+/).filter(w => w.length > 1).length;
+        if (uniqueWords < 5) {
+          throw new Error('Description must contain at least 5 meaningful words');
+        }
+        return true;
+      })
       .escape(),
     
     body('category_id')
       .notEmpty().withMessage('Category is required')
-      .isUUID().withMessage('Invalid category ID'),
+      .isUUID().withMessage('Invalid category ID format'),
     
     body('severity')
       .optional()
-      .isIn(['low', 'medium', 'high', 'critical']).withMessage('Invalid severity level'),
+      .isIn(['low', 'medium', 'high', 'critical']).withMessage('Invalid severity level. Must be one of: low, medium, high, critical'),
     
     body('location')
       .optional()
       .trim()
-      .isLength({ max: 255 }).withMessage('Location is too long')
+      .isLength({ min: 2, max: 255 }).withMessage('Location must be between 2 and 255 characters if provided')
+      .custom((value) => {
+        if (/[<>]/.test(value)) {
+          throw new Error('Location cannot contain HTML tags (< or >)');
+        }
+        return true;
+      })
       .escape(),
     
     body('incident_date')
       .optional()
-      .isISO8601().withMessage('Invalid date format')
+      .custom((value) => {
+        if (!value) return true;
+        const dateStr = String(value).trim();
+        const parsed = new Date(dateStr);
+        if (isNaN(parsed.getTime())) {
+          throw new Error('Invalid incident date format');
+        }
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        if (parsed > today) {
+          throw new Error('Incident date cannot be in the future');
+        }
+        const oldest = new Date();
+        oldest.setFullYear(oldest.getFullYear() - 50);
+        if (parsed < oldest) {
+          throw new Error('Incident date is too far in the past');
+        }
+        return true;
+      })
   ],
 
   userUpdate: [

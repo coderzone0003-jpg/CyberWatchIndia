@@ -11,6 +11,9 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: var(--background);
   color: #123;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 html {
@@ -187,9 +190,23 @@ html {
   min-width: 260px;
 }
 
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+  padding-bottom: 2rem;
+}
+
 .footer {
   background: #0f172a;
   color: #f8fafc;
+  margin-top: auto;
+  padding-top: 2rem;
+  padding-bottom: 1rem;
 }
 
 .footer a,

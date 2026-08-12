@@ -1,46 +1,118 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { api } from '../utils/api';
-import { supabase } from '../config/supabase';
+import { clearAuthVerifyCache } from '../components/ProtectedRoute';
 
 function LoginPage({ onLogin }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' });
+
+  // Redirect if already logged in as admin
+  useEffect(() => {
+    const redirectMessage = location.state?.message;
+    if (redirectMessage) {
+      setError(redirectMessage);
+    }
+
+    const token = localStorage.getItem('cyberAuthToken');
+    const user = localStorage.getItem('cyberAuthUser');
+    if (token && user) {
+      try {
+        const parsed = JSON.parse(user);
+        if (String(parsed.role || '').toLowerCase() === 'admin') {
+          navigate('/admin', { replace: true });
+        }
+      } catch {
+        // ignore invalid stored user
+      }
+    }
+  }, [navigate, location.state]);
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password) => {
+    return password.length >= 6;
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    let isValid = true;
+
+    if (!form.email) {
+      errors.email = 'Email is required';
+      isValid = false;
+    } else if (!validateEmail(form.email)) {
+      errors.email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    if (!form.password) {
+      errors.password = 'Password is required';
+      isValid = false;
+    } else if (!validatePassword(form.password)) {
+      errors.password = 'Password must be at least 6 characters';
+      isValid = false;
+    }
+
+    setFieldErrors(errors);
+    return isValid;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({ email: '', password: '' });
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
+    clearAuthVerifyCache();
 
     try {
-      // 1. Authenticate with Supabase directly
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: form.email,
-        password: form.password
-      });
+      const loginData = await api.login(
+        form.email.trim().toLowerCase(),
+        form.password.trim()
+      );
 
-      if (authError) throw authError;
+      localStorage.setItem('cyberAuthToken', loginData.token);
 
-      // 2. Save token so apiRequest works for backend calls
-      localStorage.setItem('cyberAuthToken', authData.session.access_token);
-
-      // 3. Fetch user profile from our backend to get role
       const profileData = await api.getCurrentUser();
-      
-      // 4. Call parent callback
-      onLogin(profileData.user, authData.session.access_token);
+      localStorage.setItem('cyberAuthUser', JSON.stringify(profileData.user));
 
-      // 5. Navigate based on role
-      if (profileData.user.role === 'admin' || profileData.user.role === 'officer') {
-        navigate('/admin');
+      onLogin(profileData.user, loginData.token);
+
+      const role = String(profileData.user.role || '').toLowerCase();
+      if (role === 'admin') {
+        navigate('/admin', { replace: true });
       } else {
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       }
     } catch (err) {
-      setError(err.message || 'Login failed. Please check your credentials.');
-      // Clean up token if profile fetch failed
+      let message = err.message || 'Login failed. Please check your credentials.';
+
+      if (message.includes('Too many authentication attempts')) {
+        message = 'Too many failed attempts. Wait 15 minutes or restart the backend server, then try again.';
+      } else if (message.includes('Insufficient permissions')) {
+        message = 'Your account does not have admin access. Contact an administrator.';
+      } else if (message === 'Invalid email or password' || message === 'Invalid login credentials') {
+        message = 'Invalid email or password. Please try again.';
+      } else if (message === 'Profile not found') {
+        message = 'Account found but profile is missing. Run: cd backend && npm run create-admin';
+      } else if (message.includes('Cannot reach the server')) {
+        message = `${message}. Start it with: cd backend && npm run dev`;
+      }
+
+      setError(message);
       localStorage.removeItem('cyberAuthToken');
     } finally {
       setLoading(false);
@@ -52,7 +124,7 @@ function LoginPage({ onLogin }) {
       <div className="container d-flex justify-content-center">
         <form onSubmit={handleSubmit} className="contact-form p-4 rounded-4 shadow-sm" style={{ maxWidth: '450px', width: '100%' }}>
           <h3 className="fw-bold mb-3">Login</h3>
-          
+
           {error && (
             <div className="alert alert-danger mb-3" role="alert">
               {error}
@@ -61,36 +133,56 @@ function LoginPage({ onLogin }) {
 
           <div className="mb-3">
             <label className="form-label">Email</label>
-            <input 
-              type="email" 
-              className="form-control" 
-              placeholder="you@example.com" 
-              value={form.email} 
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            <input
+              type="email"
+              className={`form-control ${fieldErrors.email ? 'is-invalid' : ''}`}
+              placeholder="you@example.com"
+              value={form.email}
+              onChange={(e) => {
+                setForm({ ...form, email: e.target.value });
+                if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: '' });
+              }}
               disabled={loading}
               required
             />
+            {fieldErrors.email && <div className="invalid-feedback">{fieldErrors.email}</div>}
           </div>
           <div className="mb-3">
             <label className="form-label">Password</label>
-            <input 
-              type="password" 
-              className="form-control" 
-              placeholder="Password" 
-              value={form.password} 
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              disabled={loading}
-              required
-            />
+            <div className="input-group">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className={`form-control ${fieldErrors.password ? 'is-invalid' : ''}`}
+                placeholder="Password"
+                value={form.password}
+                onChange={(e) => {
+                  setForm({ ...form, password: e.target.value });
+                  if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: '' });
+                }}
+                disabled={loading}
+                required
+              />
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => setShowPassword((prev) => !prev)}
+                disabled={loading}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+              </button>
+              {fieldErrors.password && <div className="invalid-feedback d-block">{fieldErrors.password}</div>}
+            </div>
           </div>
           <div className="mb-3">
             <Link to="/forgot-password" className="text-decoration-none small">
               Forgot password?
             </Link>
           </div>
-          <button 
-            className="btn btn-success w-100" 
-            type="submit" 
+          <button
+            className="btn btn-success w-100"
+            type="submit"
             disabled={loading}
           >
             {loading ? (

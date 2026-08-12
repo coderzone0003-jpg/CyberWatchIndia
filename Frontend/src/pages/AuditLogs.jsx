@@ -37,7 +37,7 @@ function AuditLogs() {
       setPagination(prev => ({ ...prev, total: data.pagination?.total || 0 }));
     } catch (err) {
       console.error('Failed to fetch audit logs:', err);
-      setError('Failed to load audit logs. Please try again.');
+      setError(err.message || 'Failed to load audit logs. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -93,22 +93,17 @@ function AuditLogs() {
 
   if (loading) {
     return (
-      <section className="section py-4">
-        <div className="container-fluid">
-          <div className="text-center py-5">
-            <div className="spinner-border text-success" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-3 text-muted">Loading audit logs...</p>
-          </div>
+      <div className="text-center py-5">
+        <div className="spinner-border text-success" role="status">
+          <span className="visually-hidden">Loading...</span>
         </div>
-      </section>
+        <p className="mt-3 text-muted">Loading audit logs...</p>
+      </div>
     );
   }
 
   return (
-    <section className="section py-4">
-      <div className="container-fluid">
+    <>
         {error && (
           <div className="alert alert-danger mb-4" role="alert">
             {error}
@@ -279,8 +274,7 @@ function AuditLogs() {
             </div>
           )}
         </div>
-      </div>
-    </section>
+    </>
   );
 }
 

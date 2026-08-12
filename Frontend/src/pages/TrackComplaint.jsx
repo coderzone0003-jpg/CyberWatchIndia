@@ -189,6 +189,23 @@ function TrackComplaint() {
                   </p>
                   <p className="mb-0"><strong>Submitted On:</strong> {formatDate(complaint.created_at)}</p>
                 </div>
+
+                <div className="mb-3">
+                  <h5 className="fw-bold mb-2">Assigned Officer</h5>
+                  {complaint.officer ? (
+                    <div className="border rounded-3 p-3 bg-light">
+                      <p className="mb-1"><strong>Name:</strong> {complaint.officer.full_name}</p>
+                      {complaint.officer.badge_number && (
+                        <p className="mb-1"><strong>Badge:</strong> {complaint.officer.badge_number}</p>
+                      )}
+                      {complaint.officer.specialization && (
+                        <p className="mb-0"><strong>Specialization:</strong> {complaint.officer.specialization}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-muted mb-0">No officer assigned yet. Your case is awaiting assignment.</p>
+                  )}
+                </div>
                 
                 {evidence.length > 0 && (
                   <div className="mb-3">

@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS complaints (
     category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'investigating', 'resolved', 'rejected')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'under investigation', 'investigating', 'resolved', 'rejected')),
     severity VARCHAR(20) DEFAULT 'medium' CHECK (severity IN ('low', 'medium', 'high', 'critical')),
     location VARCHAR(255),
     incident_date DATE,

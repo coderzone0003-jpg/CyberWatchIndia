@@ -23,7 +23,7 @@ function ManageUsers() {
       setUsers(data);
     } catch (err) {
       console.error('Failed to fetch users:', err);
-      setError('Failed to load users. Please try again.');
+      setError(err.message || 'Failed to load users. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -76,22 +76,17 @@ function ManageUsers() {
 
   if (loading) {
     return (
-      <section className="section py-4">
-        <div className="container-fluid">
-          <div className="text-center py-5">
-            <div className="spinner-border text-success" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-3 text-muted">Loading users...</p>
-          </div>
+      <div className="text-center py-5">
+        <div className="spinner-border text-success" role="status">
+          <span className="visually-hidden">Loading...</span>
         </div>
-      </section>
+        <p className="mt-3 text-muted">Loading users...</p>
+      </div>
     );
   }
 
   return (
-    <section className="section py-4">
-      <div className="container-fluid">
+    <>
         {error && (
           <div className="alert alert-danger mb-4" role="alert">
             {error}
@@ -149,7 +144,7 @@ function ManageUsers() {
                   users.map((user) => (
                     <tr key={user.id}>
                       <td>
-                        <strong>{user.name}</strong>
+                        <strong>{user.full_name || user.name || 'Unknown'}</strong>
                       </td>
                       <td>{user.email}</td>
                       <td>
@@ -175,7 +170,7 @@ function ManageUsers() {
                           {user.role !== 'admin' && (
                             <button 
                               className="btn btn-outline-danger"
-                              onClick={() => handleDeleteUser(user.id, user.name)}
+                              onClick={() => handleDeleteUser(user.id, user.full_name || user.name || user.email)}
                               title="Delete"
                             >
                               Delete
@@ -196,8 +191,7 @@ function ManageUsers() {
             </div>
           )}
         </div>
-      </div>
-    </section>
+    </>
   );
 }
 

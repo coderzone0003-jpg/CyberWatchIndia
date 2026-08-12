@@ -1,20 +1,23 @@
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 /**
  * Rate limiter for authentication endpoints
  * Prevents brute force attacks on login/register
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per windowMs
+  max: isProduction ? 5 : 100,
   message: {
     error: 'Too many authentication attempts, please try again later.',
     retryAfter: '15 minutes'
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: true // Don't count successful requests
+  skipSuccessfulRequests: true,
+  skip: () => !isProduction,
 });
 
 /**
@@ -38,13 +41,14 @@ const complaintLimiter = rateLimit({
  */
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per 15 minutes
+  max: isProduction ? 100 : 5000,
   message: {
     error: 'Too many requests, please try again later.',
     retryAfter: '15 minutes'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  skip: () => !isProduction,
 });
 
 /**

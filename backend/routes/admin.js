@@ -299,7 +299,8 @@ router.get('/users', auth, checkRole('admin'), async (req, res) => {
   try {
     const filters = {};
     if (req.query.role) filters.role = req.query.role;
-    if (req.query.is_active !== undefined) filters.is_active = req.query.is_active === 'true';
+    if (req.query.is_active === 'true') filters.is_active = true;
+    if (req.query.is_active === 'false') filters.is_active = false;
 
     const users = await profileOperations.getAll(filters);
     
@@ -346,7 +347,13 @@ router.put('/complaints/:id/status', auth, checkRole('admin'), async (req, res) 
     });
   } catch (error) {
     console.error('Update complaint status error:', error);
-    res.status(500).json({ message: 'Server error while updating complaint status' });
+    const statusCode = error.code === '23514' ? 400 : 500;
+    res.status(statusCode).json({
+      message:
+        error.code === '23514'
+          ? 'Invalid status value for this database. Allowed: pending, under investigation, resolved, rejected.'
+          : 'Server error while updating complaint status',
+    });
   }
 });
 
@@ -355,32 +362,69 @@ router.put('/complaints/:id/status', auth, checkRole('admin'), async (req, res) 
 // @access  Private (Admin only)
 router.put('/complaints/:id/assign', auth, checkRole('admin'), async (req, res) => {
   try {
-    const { officer_id } = req.body;
+    const officerId = req.body?.officer_id || req.body?.officerId;
 
-    if (!officer_id) {
-      return res.status(400).json({ message: 'Please provide officer ID' });
+    if (!officerId) {
+      return res.status(400).json({ message: 'Please select an officer to assign' });
     }
 
-    const updatedComplaint = await complaintOperations.assignOfficer(req.params.id, officer_id);
+    const complaint = await complaintOperations.findById(req.params.id);
+    if (!complaint) {
+      return res.status(404).json({ message: 'Complaint not found' });
+    }
 
-    // Log the assignment
-    await auditLogOperations.create({
-      user_id: req.user.userId,
-      action: 'OFFICER_ASSIGNED',
-      entity_type: 'complaint',
-      entity_id: req.params.id,
-      details: { officer_id, assigned_by: req.user.email },
-      ip_address: req.ip,
-      user_agent: req.get('user-agent')
-    });
+    const updatedComplaint = await complaintOperations.assignOfficer(req.params.id, officerId);
+
+    try {
+      await auditLogOperations.create({
+        user_id: req.user.userId,
+        action: 'OFFICER_ASSIGNED',
+        entity_type: 'complaint',
+        entity_id: req.params.id,
+        details: {
+          officer_id: officerId,
+          tracking_id: updatedComplaint.tracking_id,
+          assigned_by: req.user.email,
+        },
+        ip_address: req.ip,
+        user_agent: req.get('user-agent'),
+      });
+    } catch (auditError) {
+      console.warn('Audit log failed for officer assignment:', auditError.message);
+    }
 
     res.json({
       message: 'Officer assigned successfully',
-      complaint: updatedComplaint
+      complaint: updatedComplaint,
     });
   } catch (error) {
     console.error('Assign officer error:', error);
-    res.status(500).json({ message: 'Server error while assigning officer' });
+    const statusCode = error.statusCode || (error.code === '23514' ? 400 : 500);
+    res.status(statusCode).json({
+      message:
+        error.code === '23514'
+          ? 'Invalid complaint status for this database. Please run the status migration SQL or contact support.'
+          : error.message || 'Server error while assigning officer',
+    });
+  }
+});
+
+router.put('/complaints/:id/unassign', auth, checkRole('admin'), async (req, res) => {
+  try {
+    const complaint = await complaintOperations.findById(req.params.id);
+    if (!complaint) {
+      return res.status(404).json({ message: 'Complaint not found' });
+    }
+
+    const updatedComplaint = await complaintOperations.unassignOfficer(req.params.id);
+
+    res.json({
+      message: 'Officer unassigned successfully',
+      complaint: updatedComplaint,
+    });
+  } catch (error) {
+    console.error('Unassign officer error:', error);
+    res.status(500).json({ message: error.message || 'Server error while unassigning officer' });
   }
 });
 
@@ -587,7 +631,10 @@ router.get('/officers', auth, checkRole('admin'), async (req, res) => {
         const workload = {
           total: assignedComplaints.length,
           pending: assignedComplaints.filter(c => c.status === 'pending').length,
-          investigation: assignedComplaints.filter(c => c.status === 'under investigation').length,
+          investigation: assignedComplaints.filter(c => {
+            const s = String(c.status || '').toLowerCase();
+            return s === 'under investigation' || s === 'investigating';
+          }).length,
           resolved: assignedComplaints.filter(c => c.status === 'resolved').length
         };
         
@@ -619,33 +666,87 @@ router.post('/officers', auth, checkRole('admin'), async (req, res) => {
       return res.status(400).json({ message: 'Please provide name, email, and password' });
     }
 
-    // Check if officer already exists
-    const existingOfficer = await profileOperations.findByEmail(email);
-    if (existingOfficer) {
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    // Step 1: Check if officer already exists in Supabase Auth
+    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
+    const existingAuthUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+    if (existingAuthUser) {
       return res.status(409).json({ message: 'Officer with this email already exists' });
     }
 
-    const bcrypt = require('bcryptjs');
-    const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Also check profiles table just to be safe
+    const existingProfile = await profileOperations.findByEmail(email);
+    if (existingProfile) {
+      return res.status(409).json({ message: 'Officer with this email already exists' });
+    }
 
-    const newOfficer = await profileOperations.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: 'officer',
-      specialization,
-      badge_number,
-      is_active: true,
-      is_verified: true
+    // Step 2: Create officer in Supabase Auth (this handles password + auth)
+    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email: email,
+      password: password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: name,
+        role: 'officer'
+      }
     });
+
+    if (createError) {
+      console.error('Supabase create officer auth error:', createError);
+      return res.status(500).json({ 
+        message: createError.message || 'Failed to create officer account' 
+      });
+    }
+
+    // Wait for DB trigger (on_auth_user_created) to auto-create the profile
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Step 3: Update the auto-created profile with officer-specific fields (role, specialization, badge_number)
+    const { data: updatedProfile, error: profileUpdateError } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        full_name: name,
+        role: 'officer',
+        specialization: specialization || null,
+        badge_number: badge_number || null,
+        is_active: true
+      })
+      .eq('id', newUser.user.id)
+      .select()
+      .single();
+
+    // If trigger didn't create profile, create it manually
+    let finalProfile = updatedProfile;
+    if (profileUpdateError || !updatedProfile) {
+      console.warn('Profile trigger may have missed, creating profile manually...');
+      const { data: manualProfile, error: manualError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          id: newUser.user.id,
+          full_name: name,
+          email: email,
+          role: 'officer',
+          specialization: specialization || null,
+          badge_number: badge_number || null,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (manualError) throw manualError;
+      finalProfile = manualProfile;
+    }
 
     // Log the officer creation
     await auditLogOperations.create({
       user_id: req.user.userId,
       action: 'OFFICER_CREATED',
       entity_type: 'user',
-      entity_id: newOfficer.id,
+      entity_id: newUser.user.id,
       details: { 
         officer_name: name, 
         officer_email: email,
@@ -655,7 +756,7 @@ router.post('/officers', auth, checkRole('admin'), async (req, res) => {
       user_agent: req.get('user-agent')
     });
 
-    const { password: _, ...officerWithoutPassword } = newOfficer;
+    const { password: _, ...officerWithoutPassword } = finalProfile;
 
     res.status(201).json({
       message: 'Officer created successfully',
@@ -663,12 +764,14 @@ router.post('/officers', auth, checkRole('admin'), async (req, res) => {
     });
   } catch (error) {
     console.error('Create officer error:', error);
-    res.status(500).json({ message: 'Server error while creating officer' });
+    res.status(500).json({ 
+      message: error.message || 'Server error while creating officer' 
+    });
   }
 });
 
 // @route   DELETE /api/admin/officers/:id
-// @desc    Delete officer
+// @desc    Delete officer (soft delete + disable in Supabase Auth)
 // @access  Private (Admin only)
 router.delete('/officers/:id', auth, checkRole('admin'), async (req, res) => {
   try {
@@ -681,7 +784,17 @@ router.delete('/officers/:id', auth, checkRole('admin'), async (req, res) => {
       return res.status(400).json({ message: 'User is not an officer' });
     }
 
+    // Soft delete in profiles table
     await profileOperations.update(req.params.id, { is_active: false });
+
+    // Also disable the user in Supabase Auth so they can't log in
+    try {
+      await supabaseAdmin.auth.admin.updateUserById(req.params.id, {
+        ban_duration: 'indefinite'
+      });
+    } catch (authError) {
+      console.warn('Could not disable officer in Supabase Auth (may have been already deleted):', authError.message);
+    }
 
     // Log the deletion
     await auditLogOperations.create({
@@ -690,7 +803,7 @@ router.delete('/officers/:id', auth, checkRole('admin'), async (req, res) => {
       entity_type: 'user',
       entity_id: req.params.id,
       details: { 
-        officer_name: officer.name, 
+        officer_name: officer.full_name || officer.name, 
         officer_email: officer.email,
         deleted_by: req.user.email 
       },

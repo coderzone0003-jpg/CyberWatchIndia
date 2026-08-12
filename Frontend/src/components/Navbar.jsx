@@ -4,12 +4,15 @@ import Notifications from './Notifications';
 
 const publicLinks = [
   { to: '/', label: 'Home' },
-  { to: '/report', label: 'Report Crime' },
-  { to: '/track', label: 'Track Complaint' },
   { to: '/safety', label: 'Safety Tips' },
   { to: '/about', label: 'About' },
   { to: '/faq', label: 'FAQ' },
   { to: '/contact', label: 'Contact' }
+];
+
+const authenticatedLinks = [
+  { to: '/report', label: 'Report Crime' },
+  { to: '/track', label: 'Track Complaint' }
 ];
 
 function Navbar({ authUser, onLogout }) {
@@ -45,6 +48,13 @@ function Navbar({ authUser, onLogout }) {
                   </NavLink>
                 </li>
               ))}
+              {authUser && authenticatedLinks.map((item) => (
+                <li className="nav-item" key={item.to}>
+                  <NavLink className={({ isActive }) => `nav-link ${isActive ? 'active fw-semibold' : ''}`} to={item.to}>
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
               {!authUser ? (
                 <>
                   <li className="nav-item ms-lg-3">
@@ -60,7 +70,7 @@ function Navbar({ authUser, onLogout }) {
                     <Notifications authUser={authUser} />
                   </li>
                   <li className="nav-item">
-                    <NavLink className="btn btn-outline-success btn-sm" to={authUser.role === 'admin' ? '/admin' : '/dashboard'}>Dashboard</NavLink>
+                    <NavLink className="btn btn-outline-success btn-sm" to={String(authUser.role || '').toLowerCase() === 'admin' ? '/admin' : '/dashboard'}>Dashboard</NavLink>
                   </li>
                   <li className="nav-item">
                     <button className="btn btn-outline-danger btn-sm" onClick={onLogout}>Logout</button>

@@ -19,6 +19,75 @@ const ALLOWED_MIME_TYPES = [
 
 const BUCKET_NAME = 'evidence';
 
+function guessMimeType(filename) {
+  const ext = path.extname(filename || '').toLowerCase();
+  const map = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.pdf': 'application/pdf',
+    '.txt': 'text/plain',
+    '.doc': 'application/msword',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  };
+  return map[ext] || 'application/octet-stream';
+}
+
+/**
+ * List evidence files in storage for a user folder
+ */
+async function listFilesForUser(userId) {
+  if (!userId) return [];
+
+  const { data, error } = await supabaseAdmin.storage
+    .from(BUCKET_NAME)
+    .list(String(userId), {
+      limit: 100,
+      sortBy: { column: 'created_at', order: 'desc' },
+    });
+
+  if (error) {
+    console.error('Storage list error:', error.message);
+    return [];
+  }
+
+  return (data || [])
+    .filter((item) => item?.name && !item.name.endsWith('/'))
+    .map((item) => ({
+      file_path: `${userId}/${item.name}`,
+      file_name: item.name.replace(/^\d+_/, ''),
+      file_type: guessMimeType(item.name),
+      file_size: item.metadata?.size || item.metadata?.contentLength || 0,
+      created_at: item.created_at || item.updated_at || null,
+    }));
+}
+
+/**
+ * List all files in the evidence bucket (all user folders)
+ */
+async function listAllBucketFiles() {
+  const { data: rootItems, error: rootError } = await supabaseAdmin.storage
+    .from(BUCKET_NAME)
+    .list('', { limit: 1000 });
+
+  if (rootError) {
+    throw new Error(`Failed to list evidence bucket: ${rootError.message}`);
+  }
+
+  const allFiles = [];
+
+  for (const item of rootItems || []) {
+    if (!item?.name) continue;
+
+    const userFiles = await listFilesForUser(item.name);
+    allFiles.push(...userFiles);
+  }
+
+  return allFiles;
+}
+
 /**
  * Validate file type
  */
@@ -154,10 +223,14 @@ module.exports = {
   uploadFile,
   deleteFile,
   getSignedUrl,
+  listFilesForUser,
+  listAllBucketFiles,
+  guessMimeType,
   upload,
   uploadMultiple,
   isValidFileType,
   isValidFileSize,
   MAX_FILE_SIZE,
-  ALLOWED_MIME_TYPES
+  ALLOWED_MIME_TYPES,
+  BUCKET_NAME,
 };

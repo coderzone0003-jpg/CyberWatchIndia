@@ -31,9 +31,11 @@ function ManageComplaints() {
     }
   };
 
-  const fetchComplaints = async () => {
+  const fetchComplaints = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       setError('');
       
       // Prepare filters for API
@@ -45,12 +47,14 @@ function ManageComplaints() {
       if (filters.date_to) apiFilters.created_at_lte = filters.date_to;
       
       const data = await api.getAdminComplaints(apiFilters);
-      setComplaints(data);
+      setComplaints(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to fetch complaints:', err);
-      setError('Failed to load complaints. Please try again.');
+      setError(err.message || 'Failed to load complaints. Please try again.');
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -66,22 +70,140 @@ function ManageComplaints() {
   const handleStatusChange = async (complaintId, newStatus) => {
     try {
       await api.updateComplaintStatus(complaintId, newStatus);
-      // Refresh the list
-      fetchComplaints();
+      await fetchComplaints(true);
     } catch (err) {
       console.error('Failed to update status:', err);
       setError('Failed to update complaint status');
     }
   };
 
-  const handleAssignOfficer = async (complaintId, officerId) => {
+  const [assigningId, setAssigningId] = useState(null);
+  const [evidenceModal, setEvidenceModal] = useState({
+    open: false,
+    complaint: null,
+    files: [],
+    loading: false,
+    error: '',
+    info: '',
+  });
+
+  const formatFileSize = (bytes) => {
+    if (!bytes && bytes !== 0) return 'Unknown size';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const handleShowEvidence = async (complaint) => {
+    setEvidenceModal({
+      open: true,
+      complaint,
+      files: [],
+      loading: true,
+      error: '',
+      info: '',
+    });
+
     try {
-      await api.assignOfficer(complaintId, officerId);
-      // Refresh the list
-      fetchComplaints();
+      const data = await api.getComplaintEvidence(complaint.id);
+      const files = data.evidence || [];
+      const fromBucket = data.source === 'storage' && files.length > 0;
+      setEvidenceModal((prev) => ({
+        ...prev,
+        files,
+        loading: false,
+        error:
+          data.setup_required && files.length === 0
+            ? 'Evidence table missing in Supabase. Run backend/supabase/create-evidence-table.sql in SQL Editor, then: cd backend && npm run sync-evidence'
+            : '',
+        info:
+          data.message ||
+          (fromBucket
+            ? `${files.length} file(s) loaded from Supabase storage bucket. Run create-evidence-table.sql + npm run sync-evidence to link them in the database.`
+            : data.table_missing
+              ? 'Evidence table not set up yet. Upload new files after running create-evidence-table.sql.'
+              : ''),
+      }));
+    } catch (err) {
+      console.error('Failed to fetch evidence:', err);
+      setEvidenceModal((prev) => ({
+        ...prev,
+        loading: false,
+        error: err.message || 'Failed to load evidence files',
+      }));
+    }
+  };
+
+  const closeEvidenceModal = () => {
+    setEvidenceModal({
+      open: false,
+      complaint: null,
+      files: [],
+      loading: false,
+      error: '',
+      info: '',
+    });
+  };
+
+  const handleDownloadEvidence = (file) => {
+    if (!file?.signed_url) {
+      setEvidenceModal((prev) => ({
+        ...prev,
+        error: `Download link unavailable for "${file?.file_name || 'file'}".`,
+      }));
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = file.signed_url;
+    link.download = file.file_name || 'evidence-file';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const getOfficerOptions = (complaint) => {
+    const options = [...officers];
+    const assignedId = complaint.assigned_officer_id;
+    const assignedOfficer = complaint.officer;
+
+    if (assignedId && assignedOfficer && !options.some((o) => o.id === assignedId)) {
+      options.unshift(assignedOfficer);
+    }
+
+    return options;
+  };
+
+  const handleAssignOfficer = async (complaintId, officerId) => {
+    const previousComplaints = complaints;
+
+    try {
+      setAssigningId(complaintId);
+      setError('');
+
+      let response;
+      if (!officerId) {
+        response = await api.unassignOfficer(complaintId);
+      } else {
+        response = await api.assignOfficer(complaintId, officerId);
+      }
+
+      const updatedComplaint = response?.complaint;
+      if (updatedComplaint) {
+        setComplaints((prev) =>
+          prev.map((c) => (c.id === complaintId ? { ...c, ...updatedComplaint } : c))
+        );
+      } else {
+        await fetchComplaints(true);
+      }
     } catch (err) {
       console.error('Failed to assign officer:', err);
-      setError('Failed to assign officer');
+      setError(err.message || 'Failed to assign officer');
+      setComplaints(previousComplaints);
+    } finally {
+      setAssigningId(null);
     }
   };
 
@@ -103,22 +225,17 @@ function ManageComplaints() {
 
   if (loading) {
     return (
-      <section className="section py-4">
-        <div className="container-fluid">
-          <div className="text-center py-5">
-            <div className="spinner-border text-success" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-3 text-muted">Loading complaints...</p>
-          </div>
+      <div className="text-center py-5">
+        <div className="spinner-border text-success" role="status">
+          <span className="visually-hidden">Loading...</span>
         </div>
-      </section>
+        <p className="mt-3 text-muted">Loading complaints...</p>
+      </div>
     );
   }
 
   return (
-    <section className="section py-4">
-      <div className="container-fluid">
+    <>
         {error && (
           <div className="alert alert-danger mb-4" role="alert">
             {error}
@@ -220,19 +337,34 @@ function ManageComplaints() {
                           className="form-select form-select-sm"
                           value={complaint.assigned_officer_id || ''}
                           onChange={(e) => handleAssignOfficer(complaint.id, e.target.value)}
-                          style={{ minWidth: '150px' }}
+                          disabled={assigningId === complaint.id}
+                          style={{ minWidth: '180px' }}
                         >
                           <option value="">Unassigned</option>
-                          {officers.map(officer => (
+                          {getOfficerOptions(complaint).map((officer) => (
                             <option key={officer.id} value={officer.id}>
                               {officer.full_name || officer.name} ({officer.workload?.total || 0} cases)
                             </option>
                           ))}
                         </select>
+                        {complaint.officer && (
+                          <small className="text-success d-block mt-1">
+                            Assigned: {complaint.officer.full_name}
+                          </small>
+                        )}
                       </td>
                       <td>{new Date(complaint.created_at).toLocaleDateString()}</td>
                       <td>
                         <div className="btn-group btn-group-sm">
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary"
+                            onClick={() => handleShowEvidence(complaint)}
+                            title="Show Evidence"
+                          >
+                            <i className="bi bi-paperclip me-1"></i>
+                            Evidence
+                          </button>
                           <button 
                             className="btn btn-outline-success"
                             onClick={() => handleStatusChange(complaint.id, 'under investigation')}
@@ -262,8 +394,98 @@ function ManageComplaints() {
             </div>
           )}
         </div>
-      </div>
-    </section>
+
+        {evidenceModal.open && (
+          <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title fw-bold">
+                    <i className="bi bi-paperclip me-2"></i>
+                    Evidence — {evidenceModal.complaint?.tracking_id}
+                  </h5>
+                  <button type="button" className="btn-close" onClick={closeEvidenceModal} aria-label="Close"></button>
+                </div>
+                <div className="modal-body">
+                  <p className="text-muted mb-3">
+                    <strong>{evidenceModal.complaint?.title}</strong>
+                  </p>
+
+                  {evidenceModal.error && (
+                    <div className="alert alert-danger">{evidenceModal.error}</div>
+                  )}
+
+                  {evidenceModal.info && !evidenceModal.error && (
+                    <div className="alert alert-info">{evidenceModal.info}</div>
+                  )}
+
+                  {evidenceModal.loading ? (
+                    <div className="text-center py-4">
+                      <div className="spinner-border text-success" role="status">
+                        <span className="visually-hidden">Loading evidence...</span>
+                      </div>
+                      <p className="mt-3 text-muted mb-0">Loading evidence files...</p>
+                    </div>
+                  ) : evidenceModal.files.length === 0 ? (
+                    <div className="text-center py-4 text-muted">
+                      <i className="bi bi-inbox fs-1 d-block mb-2"></i>
+                      No evidence files uploaded for this complaint.
+                    </div>
+                  ) : (
+                    <div className="list-group">
+                      {evidenceModal.files.map((file) => (
+                        <div
+                          key={file.id || file.file_path}
+                          className="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2"
+                        >
+                          <div>
+                            <div className="fw-semibold">
+                              <i className="bi bi-file-earmark me-2"></i>
+                              {file.file_name}
+                            </div>
+                            <small className="text-muted">
+                              {formatFileSize(file.file_size)} • {file.file_type || 'Unknown type'}
+                            </small>
+                          </div>
+                          <div className="btn-group btn-group-sm">
+                            {file.signed_url && (
+                              <a
+                                href={file.signed_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-outline-primary"
+                                title="View"
+                              >
+                                <i className="bi bi-eye me-1"></i>
+                                View
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              className="btn btn-success"
+                              onClick={() => handleDownloadEvidence(file)}
+                              disabled={!file.signed_url}
+                              title="Download"
+                            >
+                              <i className="bi bi-download me-1"></i>
+                              Download
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={closeEvidenceModal}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+    </>
   );
 }
 

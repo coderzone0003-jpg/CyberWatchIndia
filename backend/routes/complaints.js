@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { complaintOperations, categoryOperations, auditLogOperations, evidenceOperations, notificationOperations } = require('../utils/database');
+const { complaintOperations, categoryOperations, auditLogOperations, evidenceOperations, notificationOperations, profileOperations } = require('../utils/database');
 const { supabaseAdmin } = require('../config/supabase');
 const { sendComplaintConfirmation, sendStatusUpdate, sendOfficerAssignment } = require('../utils/email');
 const { auth, isAdminOrOfficer } = require('../middleware/auth');
@@ -8,6 +8,15 @@ const { validateComplaint, sanitizeString } = require('../utils/validation');
 const { uploadMultiple, uploadFile, deleteFile } = require('../utils/fileUpload');
 const { complaintLimiter, apiLimiter } = require('../middleware/security');
 const { handleValidationErrors, validationRules, sanitizeRequest } = require('../middleware/validation');
+
+async function canAccessComplaint(user, complaint) {
+  if (!complaint || !user) return false;
+  if (complaint.user_id === user.userId) return true;
+
+  const profile = await profileOperations.findById(user.userId);
+  const role = String(profile?.role || '').toLowerCase();
+  return role === 'admin' || role === 'officer';
+}
 
 // @route   GET /api/complaints/my
 // @desc    Get current user's complaints with pagination and filtering
@@ -47,21 +56,25 @@ router.get('/my', auth, async (req, res) => {
 // @access  Private
 router.get('/my/statistics', auth, async (req, res) => {
   try {
-    const complaints = await complaintOperations.getByUserId(req.user.userId);
+    const complaints = (await complaintOperations.getByUserId(req.user.userId)) || [];
+    const { isInvestigationStatus } = require('../utils/complaintStatus');
 
     const stats = {
       total: complaints.length,
       pending: complaints.filter(c => c.status === 'pending').length,
-      under_investigation: complaints.filter(c => c.status === 'under investigation').length,
+      under_investigation: complaints.filter(c => isInvestigationStatus(c.status)).length,
       resolved: complaints.filter(c => c.status === 'resolved').length,
       rejected: complaints.filter(c => c.status === 'rejected').length,
-      recent: complaints.slice(0, 5) // Last 5 complaints
+      recent: complaints.slice(0, 5)
     };
 
     res.json(stats);
   } catch (error) {
     console.error('Get user statistics error:', error);
-    res.status(500).json({ message: 'Server error while fetching statistics' });
+    res.status(500).json({
+      message: 'Server error while fetching statistics',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
@@ -78,12 +91,20 @@ router.get('/number/:trackingId', async (req, res) => {
 
     // Return limited information for public tracking
     res.json({
+      id: complaint.id,
       tracking_id: complaint.tracking_id,
       title: complaint.title,
       status: complaint.status,
       category: complaint.category?.name,
       created_at: complaint.created_at,
-      updated_at: complaint.updated_at
+      updated_at: complaint.updated_at,
+      officer: complaint.officer
+        ? {
+            full_name: complaint.officer.full_name,
+            badge_number: complaint.officer.badge_number,
+            specialization: complaint.officer.specialization,
+          }
+        : null,
     });
   } catch (error) {
     console.error('Get complaint by number error:', error);
@@ -160,8 +181,13 @@ router.get('/:id', auth, async (req, res) => {
     }
 
     // Check if user has permission to view this complaint
-    if (req.user.role === 'user' && complaint.user_id !== req.user.userId) {
-      return res.status(403).json({ message: 'Access denied' });
+    const isOwner = complaint.user_id === req.user.userId;
+    if (!isOwner) {
+      const profile = await profileOperations.findById(req.user.userId);
+      const role = String(profile?.role || '').toLowerCase();
+      if (role !== 'admin' && role !== 'officer') {
+        return res.status(403).json({ message: 'Access denied' });
+      }
     }
 
     res.json(complaint);
@@ -469,11 +495,11 @@ router.get('/:id/evidence', auth, async (req, res) => {
     }
     
     // Check if user has access to this complaint
-    if (req.user.role === 'user' && complaint.user_id !== req.user.userId) {
+    if (!(await canAccessComplaint(req.user, complaint))) {
       return res.status(403).json({ message: 'Access denied' });
     }
     
-    const evidence = await evidenceOperations.getByComplaintId(req.params.id);
+    const { files: evidence, source, tableMissing } = await evidenceOperations.getForComplaint(complaint);
     
     // Generate signed URLs for each file
     const { getSignedUrl } = require('../utils/fileUpload');
@@ -495,10 +521,29 @@ router.get('/:id/evidence', auth, async (req, res) => {
       })
     );
     
-    res.json({ evidence: evidenceWithUrls });
+    res.json({
+      evidence: evidenceWithUrls,
+      source,
+      table_missing: tableMissing,
+      message: tableMissing
+        ? 'Showing files from Supabase storage bucket. Run create-evidence-table.sql and npm run sync-evidence for full tracking.'
+        : undefined,
+    });
   } catch (error) {
     console.error('Get evidence error:', error);
-    res.status(500).json({ message: 'Server error while fetching evidence' });
+
+    if (error.code === 'EVIDENCE_TABLE_MISSING') {
+      return res.status(503).json({
+        message: error.message,
+        evidence: [],
+        setup_required: true,
+      });
+    }
+
+    res.status(500).json({
+      message: 'Server error while fetching evidence',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
   }
 });
 
@@ -514,7 +559,7 @@ router.delete('/:id/evidence/:evidenceId', auth, async (req, res) => {
     }
     
     // Check if user has access
-    if (req.user.role === 'user' && complaint.user_id !== req.user.userId) {
+    if (!(await canAccessComplaint(req.user, complaint))) {
       return res.status(403).json({ message: 'Access denied' });
     }
     

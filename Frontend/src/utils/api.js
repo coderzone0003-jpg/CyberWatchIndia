@@ -1,4 +1,17 @@
+import { clearAuthVerifyCache } from '../components/ProtectedRoute';
+
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+const buildQueryString = (filters = {}) => {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== '' && value !== null && value !== undefined) {
+      params.append(key, value);
+    }
+  });
+  const query = params.toString();
+  return query ? `?${query}` : '';
+};
 
 /**
  * Get the auth token from localStorage
@@ -19,7 +32,8 @@ const getAuthUser = () => {
  * Make an authenticated API request
  */
 const apiRequest = async (endpoint, options = {}) => {
-  const token = getAuthToken();
+  const isPublicAuth = endpoint === '/api/auth/login' || endpoint === '/api/auth/register';
+  const token = isPublicAuth ? null : getAuthToken();
   
   const headers = {
     ...options.headers,
@@ -37,13 +51,14 @@ const apiRequest = async (endpoint, options = {}) => {
   const config = {
     ...options,
     headers,
+    cache: 'no-store',
   };
 
   try {
     const response = await fetch(`${API_URL}${endpoint}`, config);
     
     // Handle 401 Unauthorized - token expired or invalid
-    if (response.status === 401) {
+    if (response.status === 401 && !endpoint.includes('/auth/login')) {
       // Clear auth data
       localStorage.removeItem('cyberAuthToken');
       localStorage.removeItem('cyberAuthUser');
@@ -56,15 +71,58 @@ const apiRequest = async (endpoint, options = {}) => {
       throw new Error('Authentication required. Please login again.');
     }
 
-    const data = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    let data = null;
+
+    if (contentType.includes('application/json')) {
+      data = await response.json();
+    } else if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || `Request failed (${response.status})`);
+    }
+
+    // Handle 429 Too Many Requests
+    if (response.status === 429) {
+      const retryAfter =
+        response.headers.get('Retry-After') ||
+        data?.retryAfter ||
+        '15 minutes';
+      throw new Error(`Too many requests. Please wait ${retryAfter} and try again.`);
+    }
 
     if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
+      const errorMessage =
+        (typeof data?.message === 'string' && data.message) ||
+        (typeof data?.error === 'string' && data.error) ||
+        (typeof data?.message?.error === 'string' && data.message.error) ||
+        `Request failed (${response.status})`;
+
+      if (response.status === 403 && errorMessage.includes('Insufficient permissions')) {
+        const currentRole = String(data?.current_role || '').toLowerCase();
+        if (currentRole === 'user' && endpoint.includes('/api/admin')) {
+          clearAuthVerifyCache();
+          localStorage.removeItem('cyberAuthToken');
+          localStorage.removeItem('cyberAuthUser');
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        }
+        throw new Error(
+          `Insufficient permissions (your role: ${data?.current_role || 'unknown'}). Admin login required.`
+        );
+      }
+
+      throw new Error(errorMessage);
     }
 
     return data;
   } catch (error) {
     console.error('API request error:', error);
+
+    if (error.message === 'Failed to fetch' || error.message === 'fetch failed') {
+      throw new Error(`Cannot reach the server. Make sure the backend is running at ${API_URL}`);
+    }
+
     throw error;
   }
 };
@@ -121,18 +179,14 @@ const api = {
     }),
 
   // Complaints
-  getComplaints: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    return apiRequest(`/api/complaints${params ? `?${params}` : ''}`);
-  },
+  getComplaints: (filters = {}) =>
+    apiRequest(`/api/complaints${buildQueryString(filters)}`),
 
   getComplaintCategories: () => 
     fetch(`${API_URL}/api/complaints/categories`).then(res => res.json()),
 
-  getMyComplaints: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    return apiRequest(`/api/complaints/my${params ? `?${params}` : ''}`);
-  },
+  getMyComplaints: (filters = {}) =>
+    apiRequest(`/api/complaints/my${buildQueryString(filters)}`),
 
   getMyComplaintStatistics: () =>
     apiRequest('/api/complaints/my/statistics'),
@@ -165,10 +219,8 @@ const api = {
     }),
 
   // Users
-  getAllUsers: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    return apiRequest(`/api/users${params ? `?${params}` : ''}`);
-  },
+  getAllUsers: (filters = {}) =>
+    apiRequest(`/api/users${buildQueryString(filters)}`),
 
   getUserById: (id) => 
     apiRequest(`/api/users/${id}`),
@@ -183,37 +235,27 @@ const api = {
   getDashboardData: () =>
     apiRequest('/api/admin/dashboard'),
 
-  getAdminReports: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    return apiRequest(`/api/admin/reports${params ? `?${params}` : ''}`);
-  },
+  getAdminReports: (filters = {}) =>
+    apiRequest(`/api/admin/reports${buildQueryString(filters)}`),
 
   exportPDF: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    const url = `${API_URL}/api/admin/export/pdf${params ? `?${params}` : ''}`;
+    const url = `${API_URL}/api/admin/export/pdf${buildQueryString(filters)}`;
     window.open(url, '_blank');
   },
 
   exportExcel: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    const url = `${API_URL}/api/admin/export/excel${params ? `?${params}` : ''}`;
+    const url = `${API_URL}/api/admin/export/excel${buildQueryString(filters)}`;
     window.open(url, '_blank');
   },
 
-  getAuditLogs: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    return apiRequest(`/api/admin/audit-logs${params ? `?${params}` : ''}`);
-  },
+  getAuditLogs: (filters = {}) =>
+    apiRequest(`/api/admin/audit-logs${buildQueryString(filters)}`),
 
-  getAdminComplaints: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    return apiRequest(`/api/admin/complaints${params ? `?${params}` : ''}`);
-  },
+  getAdminComplaints: (filters = {}) =>
+    apiRequest(`/api/admin/complaints${buildQueryString(filters)}`),
 
-  getAdminUsers: (filters = {}) => {
-    const params = new URLSearchParams(filters).toString();
-    return apiRequest(`/api/admin/users${params ? `?${params}` : ''}`);
-  },
+  getAdminUsers: (filters = {}) =>
+    apiRequest(`/api/admin/users${buildQueryString(filters)}`),
 
   getAdminOfficers: () => 
     apiRequest('/api/admin/officers'),
@@ -241,10 +283,15 @@ const api = {
       body: JSON.stringify({ status }),
     }),
 
-  assignOfficer: (complaintId, officerId) => 
+  assignOfficer: (complaintId, officerId) =>
     apiRequest(`/api/admin/complaints/${complaintId}/assign`, {
       method: 'PUT',
-      body: JSON.stringify({ officer_id: officerId }),
+      body: JSON.stringify({ officer_id: String(officerId) }),
+    }),
+
+  unassignOfficer: (complaintId) =>
+    apiRequest(`/api/admin/complaints/${complaintId}/unassign`, {
+      method: 'PUT',
     }),
 
   updateUserStatus: (id, status) => 

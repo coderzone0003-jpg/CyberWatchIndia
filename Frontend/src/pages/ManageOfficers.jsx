@@ -9,6 +9,7 @@ function ManageOfficers() {
   const [newOfficer, setNewOfficer] = useState({
     name: '',
     email: '',
+    password: '',
     role: 'officer',
     specialization: '',
     badge_number: ''
@@ -27,7 +28,7 @@ function ManageOfficers() {
       setOfficers(data);
     } catch (err) {
       console.error('Failed to fetch officers:', err);
-      setError('Failed to load officers. Please try again.');
+      setError(err.message || 'Failed to load officers. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -42,14 +43,16 @@ function ManageOfficers() {
       setNewOfficer({
         name: '',
         email: '',
+        password: '',
         role: 'officer',
         specialization: '',
         badge_number: ''
       });
+      setError('');
       fetchOfficers();
     } catch (err) {
       console.error('Failed to create officer:', err);
-      setError('Failed to create officer');
+      setError(err.message || 'Failed to create officer. Please try again.');
     }
   };
 
@@ -60,10 +63,11 @@ function ManageOfficers() {
 
     try {
       await api.deleteOfficer(officerId);
+      setError('');
       fetchOfficers();
     } catch (err) {
       console.error('Failed to delete officer:', err);
-      setError('Failed to delete officer');
+      setError(err.message || 'Failed to delete officer. Please try again.');
     }
   };
 
@@ -74,22 +78,17 @@ function ManageOfficers() {
 
   if (loading) {
     return (
-      <section className="section py-4">
-        <div className="container-fluid">
-          <div className="text-center py-5">
-            <div className="spinner-border text-success" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-3 text-muted">Loading officers...</p>
-          </div>
+      <div className="text-center py-5">
+        <div className="spinner-border text-success" role="status">
+          <span className="visually-hidden">Loading...</span>
         </div>
-      </section>
+        <p className="mt-3 text-muted">Loading officers...</p>
+      </div>
     );
   }
 
   return (
-    <section className="section py-4">
-      <div className="container-fluid">
+    <>
         {error && (
           <div className="alert alert-danger mb-4" role="alert">
             {error}
@@ -271,8 +270,7 @@ function ManageOfficers() {
             </div>
           </div>
         )}
-      </div>
-    </section>
+    </>
   );
 }
 

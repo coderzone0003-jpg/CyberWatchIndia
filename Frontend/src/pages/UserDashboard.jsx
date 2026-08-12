@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
+import { formatOfficerSummary, getAssignedOfficer } from '../utils/officerDisplay';
 
 function UserDashboard() {
   const [stats, setStats] = useState({
@@ -36,7 +37,7 @@ function UserDashboard() {
       setRecentComplaints(data.recent || []);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
-      setError('Failed to load dashboard data');
+      setError(err.message || 'Failed to load dashboard data');
       // Set default values on error
       setStats({
         total: 0,
@@ -81,6 +82,9 @@ function UserDashboard() {
         {error && (
           <div className="alert alert-warning mb-4" role="alert">
             {error}
+            <button type="button" className="btn btn-sm btn-outline-warning ms-2" onClick={fetchDashboardData}>
+              Retry
+            </button>
           </div>
         )}
 
@@ -94,25 +98,68 @@ function UserDashboard() {
         ) : (
           <>
             <div className="row g-4 mb-4">
-              <div className="col-md-4">
+              <div className="col-md-3">
                 <div className="feature-card p-4 h-100">
                   <h5 className="fw-bold">Total Complaints</h5>
                   <p className="display-6 text-success fw-bold mb-0">{stats.total}</p>
                 </div>
               </div>
-              <div className="col-md-4">
+              <div className="col-md-3">
                 <div className="feature-card p-4 h-100">
                   <h5 className="fw-bold">Pending Cases</h5>
                   <p className="display-6 text-warning fw-bold mb-0">{stats.pending}</p>
                 </div>
               </div>
-              <div className="col-md-4">
+              <div className="col-md-3">
+                <div className="feature-card p-4 h-100">
+                  <h5 className="fw-bold">Under Investigation</h5>
+                  <p className="display-6 text-info fw-bold mb-0">{stats.investigation}</p>
+                </div>
+              </div>
+              <div className="col-md-3">
                 <div className="feature-card p-4 h-100">
                   <h5 className="fw-bold">Resolved Cases</h5>
                   <p className="display-6 text-success fw-bold mb-0">{stats.resolved}</p>
                 </div>
               </div>
             </div>
+
+            {recentComplaints.some((c) => getAssignedOfficer(c)) && (
+              <div className="contact-form p-4 rounded-4 shadow-sm mb-4">
+                <h5 className="fw-bold mb-3">
+                  <i className="bi bi-person-badge me-2 text-success"></i>
+                  Assigned Case Officers
+                </h5>
+                <div className="row g-3">
+                  {recentComplaints.filter((c) => getAssignedOfficer(c)).map((complaint) => {
+                    const officer = getAssignedOfficer(complaint);
+                    return (
+                      <div className="col-md-6" key={complaint.id}>
+                        <div className="border rounded-3 p-3 h-100 bg-light">
+                          <div className="small text-muted mb-1">{complaint.tracking_id}</div>
+                          <div className="fw-semibold mb-2">{complaint.title}</div>
+                          <div className="d-flex align-items-start gap-2">
+                            <i className="bi bi-shield-check text-success mt-1"></i>
+                            <div>
+                              <div className="fw-bold">{officer.full_name}</div>
+                              {officer.badge_number && (
+                                <div className="small text-muted">Badge: {officer.badge_number}</div>
+                              )}
+                              {officer.specialization && (
+                                <div className="small text-muted">{officer.specialization}</div>
+                              )}
+                              {officer.phone && (
+                                <div className="small">Contact: {officer.phone}</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="row g-4">
               <div className="col-lg-8">
@@ -125,6 +172,7 @@ function UserDashboard() {
                           <tr>
                             <th>Tracking ID</th>
                             <th>Title</th>
+                            <th>Assigned Officer</th>
                             <th>Status</th>
                             <th>Date</th>
                           </tr>
@@ -141,6 +189,16 @@ function UserDashboard() {
                                 </Link>
                               </td>
                               <td>{complaint.title}</td>
+                              <td>
+                                {getAssignedOfficer(complaint) ? (
+                                  <span className="text-success fw-semibold">
+                                    <i className="bi bi-person-badge me-1"></i>
+                                    {formatOfficerSummary(complaint)}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted">Not assigned yet</span>
+                                )}
+                              </td>
                               <td>
                                 <span className={`badge ${getStatusColor(complaint.status)}`}>
                                   {complaint.status}

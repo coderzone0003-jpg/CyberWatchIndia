@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-function Footer() {
+function Footer({ authUser }) {
   return (
-    <footer className="footer py-4">
+    <footer className="footer">
       <div className="container">
         <div className="row g-4">
           <div className="col-md-4">
@@ -14,7 +14,7 @@ function Footer() {
             <h5 className="fw-bold">Quick Links</h5>
             <ul className="list-unstyled text-muted">
               <li><Link to="/" className="text-decoration-none">Home</Link></li>
-              <li><Link to="/report" className="text-decoration-none">Report Crime</Link></li>
+              {authUser && <li><Link to="/report" className="text-decoration-none">Report Crime</Link></li>}
               <li><Link to="/safety" className="text-decoration-none">Safety Tips</Link></li>
             </ul>
           </div>
@@ -29,6 +29,11 @@ function Footer() {
               <Link to="/contact" className="text-decoration-none me-3">Privacy Policy</Link>
               <Link to="/contact" className="text-decoration-none">Terms & Conditions</Link>
             </p>
+          </div>
+        </div>
+        <div className="row mt-4">
+          <div className="col-12 text-center">
+            <p className="text-muted mb-0">&copy; 2024 Cyber Crime Portal. All rights reserved.</p>
           </div>
         </div>
       </div>

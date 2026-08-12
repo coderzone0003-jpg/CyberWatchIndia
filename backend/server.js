@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const { supabase } = require('./config/supabase');
@@ -62,7 +61,11 @@ if (process.env.NODE_ENV === 'production') {
 
 // CORS configuration - only allow frontend origin
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'x-auth-token', 'Authorization'],
@@ -72,19 +75,20 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Prevent stale cached API responses (fixes assigned officer not appearing after update)
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  next();
+});
+
 // Rate limiting for general API
 app.use('/api/', apiLimiter);
 
-// XSS Protection - sanitize all incoming requests
-app.use(sanitizeRequest);
-
-// Body parser middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// Increase payload size limit for file uploads
+// XSS Protection - sanitize all incoming requests (after body is parsed)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(sanitizeRequest);
 
 // ============================================
 // ROUTES

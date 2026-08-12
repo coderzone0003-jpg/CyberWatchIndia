@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import About from '../components/About';
 import CrimeCategories from '../components/CrimeCategories';
 import ReportProcess from '../components/ReportProcess';
@@ -10,6 +10,26 @@ import FAQ from '../components/FAQ';
 import Contact from '../components/Contact';
 
 function Home() {
+  const navigate = useNavigate();
+  
+  const handleReportClick = () => {
+    const token = localStorage.getItem('cyberAuthToken');
+    if (token) {
+      navigate('/report');
+    } else {
+      navigate('/login');
+    }
+  };
+
+  const handleTrackClick = () => {
+    const token = localStorage.getItem('cyberAuthToken');
+    if (token) {
+      navigate('/track');
+    } else {
+      navigate('/login');
+    }
+  };
+
   return (
     <>
       <section className="hero-section py-5">
@@ -24,8 +44,8 @@ function Home() {
               <h1 className="display-5 fw-bold mb-3">National Cyber Crime Reporting Portal</h1>
               <p className="lead text-white-50 mb-4">Report cyber crimes safely and securely with verified government support, evidence guidance, and real-time case tracking.</p>
               <div className="d-flex flex-wrap gap-3">
-                <Link className="btn btn-light btn-lg text-success" to="/report">Report Cyber Crime</Link>
-                <Link className="btn btn-outline-light btn-lg" to="/track">Track Complaint</Link>
+                <button className="btn btn-light btn-lg text-success" onClick={handleReportClick}>Report Cyber Crime</button>
+                <button className="btn btn-outline-light btn-lg" onClick={handleTrackClick}>Track Complaint</button>
               </div>
             </div>
             <div className="col-lg-5">

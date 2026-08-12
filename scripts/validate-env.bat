@@ -1,52 +1,55 @@
 @echo off
-REM Environment Variable Validation Script for Windows
-REM Run this to check if all required environment variables are set
+setlocal EnableExtensions
+
+set "ROOT=%~dp0.."
+if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
 echo ======================================
 echo Environment Variable Validation
 echo ======================================
 echo.
+echo Project: %ROOT%
+echo.
 
-REM Backend validation
-echo Checking Backend Environment Variables...
-set BACKEND_ENV_FILE=..\backend\.env
-
-if not exist "%BACKEND_ENV_FILE%" (
-    echo [X] Backend .env file not found
-    echo    Please copy backend\.env.example to backend\.env and fill in the values
+echo Checking Backend Environment...
+set "BACKEND_ENV=%ROOT%\backend\.env"
+if not exist "%BACKEND_ENV%" (
+    echo [X] backend\.env not found
+    if exist "%ROOT%\backend\.env.example" (
+        echo     Copy: backend\.env.example -^> backend\.env
+    )
 ) else (
-    echo [OK] Backend .env file exists
-    echo [!] Note: Please manually verify all variables are set correctly
+    echo [OK] backend\.env exists
 )
 
 echo.
-
-REM Frontend validation
-echo Checking Frontend Environment Variables...
-set FRONTEND_ENV_FILE=.env
-
-if not exist "%FRONTEND_ENV_FILE%" (
-    echo [X] Frontend .env file not found
-    echo    Please copy .env.example to .env and fill in the values
+echo Checking Frontend Environment...
+set "FRONTEND_ENV=%ROOT%\Frontend\.env"
+if not exist "%FRONTEND_ENV%" (
+    echo [X] Frontend\.env not found
+    if exist "%ROOT%\Frontend\.env.example" (
+        echo     Copy: Frontend\.env.example -^> Frontend\.env
+    )
 ) else (
-    echo [OK] Frontend .env file exists
-    echo [!] Note: Please manually verify REACT_APP_API_URL is set correctly
+    echo [OK] Frontend\.env exists
 )
 
 echo.
 echo ======================================
-echo Validation Complete
+echo Required Backend Variables
 echo ======================================
+echo   PORT
+echo   SUPABASE_URL
+echo   SUPABASE_ANON_KEY
+echo   SUPABASE_SERVICE_ROLE_KEY
+echo   JWT_SECRET
+echo   FRONTEND_URL
+echo   ADMIN_EMAIL / ADMIN_PASSWORD
 echo.
-echo Required Backend Variables:
-echo   - PORT
-echo   - SUPABASE_URL
-echo   - SUPABASE_ANON_KEY
-echo   - SUPABASE_SERVICE_ROLE_KEY
-echo   - JWT_SECRET
-echo   - FRONTEND_URL
-echo.
-echo Required Frontend Variables:
-echo   - REACT_APP_API_URL
+echo Required Frontend Variables
+echo   REACT_APP_API_URL
+echo   REACT_APP_SUPABASE_URL
+echo   REACT_APP_SUPABASE_ANON_KEY
 echo.
 pause
+endlocal

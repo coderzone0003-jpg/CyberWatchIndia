@@ -26,7 +26,7 @@ function ManageCategories() {
       setCategories(data);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
-      setError('Failed to load categories. Please try again.');
+      setError(err.message || 'Failed to load categories. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -91,22 +91,17 @@ function ManageCategories() {
 
   if (loading) {
     return (
-      <section className="section py-4">
-        <div className="container-fluid">
-          <div className="text-center py-5">
-            <div className="spinner-border text-success" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-3 text-muted">Loading categories...</p>
-          </div>
+      <div className="text-center py-5">
+        <div className="spinner-border text-success" role="status">
+          <span className="visually-hidden">Loading...</span>
         </div>
-      </section>
+        <p className="mt-3 text-muted">Loading categories...</p>
+      </div>
     );
   }
 
   return (
-    <section className="section py-4">
-      <div className="container-fluid">
+    <>
         {error && (
           <div className="alert alert-danger mb-4" role="alert">
             {error}
@@ -292,8 +287,7 @@ function ManageCategories() {
             </div>
           </div>
         )}
-      </div>
-    </section>
+    </>
   );
 }
 

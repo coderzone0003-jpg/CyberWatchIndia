@@ -2,48 +2,108 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const AUTH_VERIFY_TTL_MS = 60 * 1000;
 
-function ProtectedRoute({ children, authUser, authToken, allowedRoles = [] }) {
-  const [isVerified, setIsVerified] = useState(false);
+let authVerifyCache = { token: null, user: null, expiresAt: 0 };
+let pendingVerification = null;
+
+const getStoredUser = () => {
+  try {
+    const raw = localStorage.getItem('cyberAuthUser');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const verifyAuthToken = async (token) => {
+  const now = Date.now();
+
+  if (authVerifyCache.token === token && authVerifyCache.expiresAt > now) {
+    return authVerifyCache.user;
+  }
+
+  if (pendingVerification?.token === token) {
+    return pendingVerification.promise;
+  }
+
+  const promise = (async () => {
+    const response = await fetch(`${API_URL}/api/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Token verification failed');
+    }
+
+    const data = await response.json();
+    authVerifyCache = {
+      token,
+      user: data.user,
+      expiresAt: Date.now() + AUTH_VERIFY_TTL_MS,
+    };
+    localStorage.setItem('cyberAuthUser', JSON.stringify(data.user));
+    return data.user;
+  })();
+
+  pendingVerification = { token, promise };
+
+  try {
+    return await promise;
+  } finally {
+    if (pendingVerification?.promise === promise) {
+      pendingVerification = null;
+    }
+  }
+};
+
+export const clearAuthVerifyCache = () => {
+  authVerifyCache = { token: null, user: null, expiresAt: 0 };
+  pendingVerification = null;
+};
+
+function ProtectedRoute({ children, authUser, authToken, allowedRoles = [], onUserVerified }) {
+  const [verifiedUser, setVerifiedUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const effectiveToken = authToken || localStorage.getItem('cyberAuthToken');
+  const effectiveUser = authUser || getStoredUser();
+
   useEffect(() => {
+    let cancelled = false;
+
     const verifyToken = async () => {
-      if (!authToken) {
-        setIsLoading(false);
+      const token = authToken || localStorage.getItem('cyberAuthToken');
+
+      if (!token) {
+        if (!cancelled) setIsLoading(false);
         return;
       }
 
       try {
-        const response = await fetch(`${API_URL}/api/auth/me`, {
-          headers: {
-            'Authorization': `Bearer ${authToken}`,
-          },
-        });
-
-        if (!response.ok) {
-          // Token is invalid, clear local storage
-          localStorage.removeItem('cyberAuthToken');
-          localStorage.removeItem('cyberAuthUser');
-          setIsLoading(false);
-          return;
-        }
-
-        const data = await response.json();
-        // Update auth user data from server
-        localStorage.setItem('cyberAuthUser', JSON.stringify(data.user));
-        setIsVerified(true);
+        const user = await verifyAuthToken(token);
+        if (cancelled) return;
+        setVerifiedUser(user);
+        onUserVerified?.(user);
       } catch (err) {
         console.error('Token verification failed:', err);
+        clearAuthVerifyCache();
         localStorage.removeItem('cyberAuthToken');
         localStorage.removeItem('cyberAuthUser');
+        if (!cancelled) setVerifiedUser(null);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     verifyToken();
-  }, [authToken]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authToken, onUserVerified]);
 
   if (isLoading) {
     return (
@@ -58,12 +118,33 @@ function ProtectedRoute({ children, authUser, authToken, allowedRoles = [] }) {
     );
   }
 
-  if (!authUser || !authToken) {
+  const activeUser = allowedRoles.length > 0 ? verifiedUser : (verifiedUser || effectiveUser);
+
+  if (!activeUser || !effectiveToken) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles.length && !allowedRoles.includes(authUser.role)) {
-    return <Navigate to="/" replace />;
+  if (allowedRoles.length && !allowedRoles.includes(String(activeUser.role || '').toLowerCase())) {
+    const needsAdmin = allowedRoles.includes('admin');
+    const isRegularUser = String(activeUser.role || '').toLowerCase() === 'user';
+
+    if (needsAdmin && isRegularUser) {
+      clearAuthVerifyCache();
+      localStorage.removeItem('cyberAuthToken');
+      localStorage.removeItem('cyberAuthUser');
+    }
+
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{
+          message: needsAdmin
+            ? 'You are logged in as a regular user. Sign in with an admin account to continue.'
+            : 'You do not have permission to view this page.',
+        }}
+      />
+    );
   }
 
   return children;

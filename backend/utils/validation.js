@@ -163,6 +163,8 @@ function validateComplaint(data) {
     errors.push('Title is too long (max 255 characters)');
   } else if (data.title.length < 10) {
     errors.push('Title is too short (min 10 characters)');
+  } else if (/^[\W\d_]+$/.test(data.title.trim())) {
+    errors.push('Title must contain descriptive text, not only symbols or numbers');
   }
   
   // Description validation
@@ -172,11 +174,18 @@ function validateComplaint(data) {
     errors.push('Description is too long (max 5000 characters)');
   } else if (data.description.length < 20) {
     errors.push('Description is too short (min 20 characters)');
+  } else {
+    const uniqueWords = data.description.trim().split(/\s+/).filter(w => w.length > 1).length;
+    if (uniqueWords < 5) {
+      errors.push('Description must contain at least 5 meaningful words');
+    }
   }
   
   // Category validation
   if (!data.category_id) {
     errors.push('Category is required');
+  } else if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(data.category_id))) {
+    errors.push('Invalid category ID format');
   }
   
   // Severity validation
@@ -190,13 +199,31 @@ function validateComplaint(data) {
       errors.push('Location must be a string');
     } else if (data.location.length > 255) {
       errors.push('Location is too long');
+    } else if (data.location.trim().length < 2) {
+      errors.push('Location is too short (min 2 characters if provided)');
+    } else if (/[<>]/.test(data.location)) {
+      errors.push('Location cannot contain HTML tags');
     }
   }
   
   // Incident date validation (optional)
   if (data.incident_date) {
-    if (!validator.isISO8601(data.incident_date) && !validator.isDate(data.incident_date)) {
+    const dateStr = String(data.incident_date).trim();
+    const parsed = new Date(dateStr);
+    if (!validator.isISO8601(dateStr) && !validator.isDate(dateStr) && isNaN(parsed.getTime())) {
       errors.push('Invalid incident date format');
+    } else if (!isNaN(parsed.getTime())) {
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (parsed > today) {
+        errors.push('Incident date cannot be in the future');
+      } else {
+        const oldest = new Date();
+        oldest.setFullYear(oldest.getFullYear() - 50);
+        if (parsed < oldest) {
+          errors.push('Incident date is too far in the past');
+        }
+      }
     }
   }
   

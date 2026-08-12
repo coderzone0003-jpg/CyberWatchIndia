@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import ErrorBoundary from '../components/ErrorBoundary';
+import ErrorBoundary from '../ErrorBoundary';
 
 // Test component that throws an error
 const ThrowError = ({ shouldThrow }) => {

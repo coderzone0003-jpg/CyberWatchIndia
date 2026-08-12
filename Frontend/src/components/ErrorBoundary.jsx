@@ -6,41 +6,30 @@ class ErrorBoundary extends React.Component {
     this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error, errorInfo) {
+  static getDerivedStateFromError(error) {
     return {
       hasError: true,
       error,
-      errorInfo
     };
   }
 
   componentDidCatch(error, errorInfo) {
     console.error('Error caught by Error Boundary:', error, errorInfo);
-    
-    // Log error to external service (optional)
+    this.setState({ errorInfo });
     this.logErrorToService(error, errorInfo);
   }
 
   logErrorToService = (error, errorInfo) => {
-    // In production, you might want to send this to an error tracking service
-    // like Sentry, LogRocket, or your own error logging API
     try {
       const errorData = {
-        message: error.toString(),
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
+        message: error?.toString?.() || 'Unknown error',
+        stack: error?.stack,
+        componentStack: errorInfo?.componentStack,
         timestamp: new Date().toISOString(),
         userAgent: navigator.userAgent,
-        url: window.location.href
+        url: window.location.href,
       };
-      
-      // Example: Send to your error logging endpoint
-      // fetch('/api/errors', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(errorData)
-      // });
-      
+
       console.log('Error data prepared for logging:', errorData);
     } catch (loggingError) {
       console.error('Failed to log error to service:', loggingError);
@@ -49,13 +38,11 @@ class ErrorBoundary extends React.Component {
 
   handleReset = () => {
     this.setState({ hasError: false, error: null, errorInfo: null });
-    // Optionally reload the page or redirect
     window.location.href = '/';
   };
 
   render() {
     if (this.state.hasError) {
-      // You can render any custom fallback UI
       return (
         <div className="error-boundary d-flex flex-column align-items-center justify-content-center vh-100 bg-light">
           <div className="text-center p-5">
@@ -66,34 +53,34 @@ class ErrorBoundary extends React.Component {
             <p className="lead text-muted mb-4">
               We're sorry, but something unexpected happened. Our team has been notified.
             </p>
-            
+
             {process.env.NODE_ENV === 'development' && (
               <div className="alert alert-warning mb-4 text-start">
                 <h5 className="alert-heading">Error Details (Development Only)</h5>
                 <pre className="mb-0" style={{ fontSize: '0.8rem', maxHeight: '200px', overflow: 'auto' }}>
-                  {this.state.error && this.state.error.toString()}
-                  {this.state.errorInfo.componentStack}
+                  {this.state.error?.toString?.()}
+                  {this.state.errorInfo?.componentStack}
                 </pre>
               </div>
             )}
-            
+
             <div className="d-flex gap-3 justify-content-center">
-              <button 
+              <button
                 className="btn btn-primary btn-lg"
                 onClick={this.handleReset}
               >
                 <i className="bi bi-arrow-clockwise me-2"></i>
                 Reload Page
               </button>
-              <button 
+              <button
                 className="btn btn-outline-secondary btn-lg"
-                onClick={() => window.location.href = '/'}
+                onClick={() => { window.location.href = '/'; }}
               >
                 <i className="bi bi-house me-2"></i>
                 Go Home
               </button>
             </div>
-            
+
             <p className="text-muted mt-4 small">
               Error ID: {Date.now()}
             </p>

@@ -3,8 +3,94 @@ const router = express.Router();
 const { profileOperations, auditLogOperations } = require('../utils/database');
 const { sanitizeUser, passwordRequirements } = require('../utils/validation');
 const { authLimiter } = require('../middleware/security');
-const { supabaseAdmin } = require('../config/supabase');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 const { auth } = require('../middleware/auth');
+
+async function getProfileForUser(userId, email) {
+  let profile = await profileOperations.findById(userId);
+
+  if (!profile && email) {
+    const normalizedEmail = email.trim().toLowerCase();
+    profile = await profileOperations.findByEmail(normalizedEmail);
+
+    if (profile) {
+      try {
+        await supabaseAdmin
+          .from('profiles')
+          .update({ id: userId })
+          .eq('email', normalizedEmail);
+        profile.id = userId;
+      } catch (linkError) {
+        console.warn('Could not link profile to auth user:', linkError.message);
+      }
+    }
+  }
+
+  if (profile && process.env.NODE_ENV !== 'production') {
+    const adminEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+    const userEmail = (email || profile.email || '').trim().toLowerCase();
+
+    if (adminEmail && userEmail === adminEmail && String(profile.role).trim().toLowerCase() !== 'admin') {
+      const { data, error } = await supabaseAdmin
+        .from('profiles')
+        .update({ role: 'admin', is_active: true })
+        .eq('id', profile.id)
+        .select()
+        .single();
+
+      if (!error && data) {
+        profile = data;
+      }
+    }
+  }
+
+  return profile;
+}
+
+const formatProfileResponse = (profile) => ({
+  id: profile.id,
+  full_name: profile.full_name,
+  email: profile.email,
+  phone: profile.phone,
+  role: profile.role,
+  is_active: profile.is_active,
+  specialization: profile.specialization,
+  badge_number: profile.badge_number,
+});
+
+// @route   POST /api/auth/login
+// @desc    Login with email and password via Supabase
+// @access  Public
+router.post('/login', authLimiter, async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password: password.trim(),
+    });
+
+    if (error || !data.session) {
+      console.error('Login failed:', error?.message || 'No session returned');
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    res.json({
+      token: data.session.access_token,
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+      },
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error during login' });
+  }
+});
 
 // @route   GET /api/auth/password-requirements
 // @desc    Get password requirements for frontend validation
@@ -20,51 +106,13 @@ router.get('/password-requirements', (req, res) => {
 // @access  Private (verified by Supabase auth middleware)
 router.get('/me', auth, async (req, res) => {
   try {
-    // First try finding profile by Supabase Auth user ID
-    let profile = await profileOperations.findById(req.user.userId);
-    
-    // If not found by ID, try finding by email (handles admin created via script)
-    if (!profile && req.user.email) {
-      const { data, error } = await supabaseAdmin
-        .from('profiles')
-        .select('*')
-        .eq('email', req.user.email)
-        .single();
-      
-      if (!error && data) {
-        profile = data;
-        
-        // Link this profile to the Supabase Auth user for future lookups
-        // by updating the profile's id to match the auth user's id
-        try {
-          await supabaseAdmin
-            .from('profiles')
-            .update({ id: req.user.userId })
-            .eq('email', req.user.email);
-          profile.id = req.user.userId;
-        } catch (linkError) {
-          console.warn('Could not link profile to auth user:', linkError.message);
-          // Continue anyway — profile was still found
-        }
-      }
-    }
-    
+    const profile = await getProfileForUser(req.user.userId, req.user.email);
+
     if (!profile) {
       return res.status(404).json({ message: 'Profile not found' });
     }
 
-    res.json({ 
-      user: {
-        id: profile.id,
-        full_name: profile.full_name,
-        email: profile.email,
-        phone: profile.phone,
-        role: profile.role,
-        is_active: profile.is_active,
-        specialization: profile.specialization,
-        badge_number: profile.badge_number
-      }
-    });
+    res.json({ user: formatProfileResponse(profile) });
   } catch (error) {
     console.error('Get current user error:', error);
     res.status(500).json({ 

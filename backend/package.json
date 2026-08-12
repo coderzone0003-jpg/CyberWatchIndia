@@ -7,6 +7,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "create-admin": "node scripts/create-admin.js",
+    "setup-evidence-table": "node scripts/setup-evidence-table.js",
+    "sync-evidence": "node scripts/sync-evidence-from-storage.js",
+    "setup-evidence": "node scripts/setup-evidence-table.js && node scripts/sync-evidence-from-storage.js",
     "test": "jest --coverage",
     "test:watch": "jest --watch"
   },
@@ -33,6 +36,7 @@
     "morgan": "^1.11.0",
     "multer": "^1.4.5-lts.1",
     "pdfkit": "^0.19.1",
+    "pg": "^8.23.0",
     "resend": "^6.18.1",
     "validator": "^13.11.0"
   },

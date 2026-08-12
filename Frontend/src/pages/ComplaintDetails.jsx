@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../utils/api';
+import { getAssignedOfficer } from '../utils/officerDisplay';
 
 function ComplaintDetails() {
   const [searchParams] = useSearchParams();
@@ -109,6 +110,8 @@ function ComplaintDetails() {
     );
   }
 
+  const assignedOfficer = getAssignedOfficer(complaint);
+
   return (
     <section className="section py-5">
       <div className="container">
@@ -141,6 +144,34 @@ function ComplaintDetails() {
               <p><strong>Location:</strong> {complaint.location || 'N/A'}</p>
               <p><strong>Incident Date:</strong> {complaint.incident_date || 'N/A'}</p>
             </div>
+          </div>
+
+          <div className="mb-4">
+            <h5 className="fw-bold mb-3">
+              <i className="bi bi-person-badge me-2 text-success"></i>
+              Assigned Investigating Officer
+            </h5>
+            {assignedOfficer ? (
+              <div className="border rounded-3 p-3 bg-light">
+                <p className="mb-1"><strong>Name:</strong> {assignedOfficer.full_name}</p>
+                {assignedOfficer.badge_number && (
+                  <p className="mb-1"><strong>Badge Number:</strong> {assignedOfficer.badge_number}</p>
+                )}
+                {assignedOfficer.specialization && (
+                  <p className="mb-1"><strong>Specialization:</strong> {assignedOfficer.specialization}</p>
+                )}
+                {assignedOfficer.phone && (
+                  <p className="mb-1"><strong>Contact:</strong> {assignedOfficer.phone}</p>
+                )}
+                {assignedOfficer.email && (
+                  <p className="mb-0"><strong>Email:</strong> {assignedOfficer.email}</p>
+                )}
+              </div>
+            ) : (
+              <div className="alert alert-secondary mb-0">
+                No officer has been assigned to this case yet. You will be notified once an officer is assigned.
+              </div>
+            )}
           </div>
 
           <div className="mb-4">

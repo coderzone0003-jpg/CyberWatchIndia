@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
+import { formatOfficerSummary, getAssignedOfficer } from '../utils/officerDisplay';
 
 function MyComplaints() {
   const [complaints, setComplaints] = useState([]);
@@ -196,6 +197,7 @@ function MyComplaints() {
                       <th>Tracking ID</th>
                       <th>Title</th>
                       <th>Category</th>
+                      <th>Assigned Officer</th>
                       <th>Date</th>
                       <th>Status</th>
                       <th>Actions</th>
@@ -214,6 +216,15 @@ function MyComplaints() {
                         </td>
                         <td>{complaint.title}</td>
                         <td>{complaint.category?.name || 'N/A'}</td>
+                        <td>
+                          {getAssignedOfficer(complaint) ? (
+                            <span className="text-success fw-semibold small">
+                              {formatOfficerSummary(complaint)}
+                            </span>
+                          ) : (
+                            <span className="text-muted small">Not assigned yet</span>
+                          )}
+                        </td>
                         <td>{formatDate(complaint.created_at)}</td>
                         <td>
                           <span className={`badge ${getStatusColor(complaint.status)}`}>

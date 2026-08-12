@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { supabase } from '../config/supabase';
+import { sanitizeMobileInput, validateIndianMobile } from '../utils/phoneValidation';
 
 function RegisterPage({ onRegister }) {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ function RegisterPage({ onRegister }) {
   const [error, setError] = useState('');
   const [passwordRequirements, setPasswordRequirements] = useState(null);
   const [passwordValidation, setPasswordValidation] = useState({ valid: true, errors: [] });
+  const [fieldErrors, setFieldErrors] = useState({ name: '', email: '', mobile: '', password: '', confirmPassword: '' });
 
   // Fetch password requirements on component mount
   useEffect(() => {
@@ -83,6 +85,14 @@ function RegisterPage({ onRegister }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({ name: '', email: '', mobile: '', password: '', confirmPassword: '' });
+
+    const mobileCheck = validateIndianMobile(form.mobile);
+    if (!mobileCheck.valid) {
+      setFieldErrors((prev) => ({ ...prev, mobile: mobileCheck.error }));
+      setError(mobileCheck.error);
+      return;
+    }
 
     // Basic validation
     if (!form.name || !form.email || !form.password) {
@@ -111,7 +121,7 @@ function RegisterPage({ onRegister }) {
         options: {
           data: {
             full_name: form.name,
-            phone: form.mobile
+            phone: mobileCheck.digits
           }
         }
       });
@@ -138,25 +148,23 @@ function RegisterPage({ onRegister }) {
       // Save token and login user automatically
       localStorage.setItem('cyberAuthToken', session.access_token);
 
-      // Fetch user profile from our backend
+      let profileUser;
       try {
         const profileData = await api.getCurrentUser();
-        onRegister(profileData.user, session.access_token);
-        navigate('/dashboard');
+        profileUser = profileData.user;
       } catch (profileErr) {
-        // Profile might not exist yet if the DB trigger hasn't fired
-        // Create a basic user object from auth data as a fallback
-        const basicUser = {
+        profileUser = {
           id: authData.user?.id,
           full_name: form.name,
-          email: form.email,
-          phone: form.mobile,
+          email: form.email.trim().toLowerCase(),
+          phone: mobileCheck.digits,
           role: 'user'
         };
-        localStorage.setItem('cyberAuthUser', JSON.stringify(basicUser));
-        onRegister(basicUser, session.access_token);
-        navigate('/dashboard');
       }
+
+      localStorage.setItem('cyberAuthUser', JSON.stringify(profileUser));
+      onRegister(profileUser, session.access_token);
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
       localStorage.removeItem('cyberAuthToken');
@@ -270,14 +278,26 @@ function RegisterPage({ onRegister }) {
               />
             </div>
             <div className="col-12">
-              <label className="form-label">Mobile</label>
-              <input 
-                className="form-control" 
-                placeholder="Mobile number" 
-                value={form.mobile} 
-                onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+              <label className="form-label">Mobile Number *</label>
+              <input
+                type="tel"
+                inputMode="numeric"
+                className={`form-control ${fieldErrors.mobile ? 'is-invalid' : ''}`}
+                placeholder="10-digit mobile number"
+                value={form.mobile}
+                onChange={(e) => {
+                  const mobile = sanitizeMobileInput(e.target.value);
+                  setForm({ ...form, mobile });
+                  if (fieldErrors.mobile) {
+                    setFieldErrors({ ...fieldErrors, mobile: '' });
+                  }
+                }}
                 disabled={loading}
+                maxLength={10}
+                required
               />
+              {fieldErrors.mobile && <div className="invalid-feedback">{fieldErrors.mobile}</div>}
+              <small className="text-muted">Enter a valid 10-digit Indian mobile number (starts with 6–9)</small>
             </div>
             <div className="col-md-6">
               <label className="form-label">Password *</label>

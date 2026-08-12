@@ -55,7 +55,7 @@ function Reports() {
       setStats(data);
     } catch (err) {
       console.error('Failed to fetch report data:', err);
-      setError('Failed to load report data. Please try again.');
+      setError(err.message || 'Failed to load report data. Please try again.');
       setStats(null);
     } finally {
       setLoading(false);
@@ -79,22 +79,17 @@ function Reports() {
 
   if (loading) {
     return (
-      <section className="section py-4">
-        <div className="container-fluid">
-          <div className="text-center py-5">
-            <div className="spinner-border text-success" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="mt-3 text-muted">Loading reports...</p>
-          </div>
+      <div className="text-center py-5">
+        <div className="spinner-border text-success" role="status">
+          <span className="visually-hidden">Loading...</span>
         </div>
-      </section>
+        <p className="mt-3 text-muted">Loading reports...</p>
+      </div>
     );
   }
 
   return (
-    <section className="section py-4">
-      <div className="container-fluid">
+    <>
         {error && (
           <div className="alert alert-danger mb-4" role="alert">
             {error}
@@ -448,8 +443,7 @@ function Reports() {
             </>
           )}
         </div>
-      </div>
-    </section>
+    </>
   );
 }
 
