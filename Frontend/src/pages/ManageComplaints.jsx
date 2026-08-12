@@ -397,7 +397,7 @@ function ManageComplaints() {
 
         {evidenceModal.open && (
           <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+            <div className="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down" role="document">
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title fw-bold">

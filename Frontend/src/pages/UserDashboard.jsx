@@ -98,25 +98,25 @@ function UserDashboard() {
         ) : (
           <>
             <div className="row g-4 mb-4">
-              <div className="col-md-3">
+              <div className="col-6 col-md-3">
                 <div className="feature-card p-4 h-100">
                   <h5 className="fw-bold">Total Complaints</h5>
                   <p className="display-6 text-success fw-bold mb-0">{stats.total}</p>
                 </div>
               </div>
-              <div className="col-md-3">
+              <div className="col-6 col-md-3">
                 <div className="feature-card p-4 h-100">
                   <h5 className="fw-bold">Pending Cases</h5>
                   <p className="display-6 text-warning fw-bold mb-0">{stats.pending}</p>
                 </div>
               </div>
-              <div className="col-md-3">
+              <div className="col-6 col-md-3">
                 <div className="feature-card p-4 h-100">
                   <h5 className="fw-bold">Under Investigation</h5>
                   <p className="display-6 text-info fw-bold mb-0">{stats.investigation}</p>
                 </div>
               </div>
-              <div className="col-md-3">
+              <div className="col-6 col-md-3">
                 <div className="feature-card p-4 h-100">
                   <h5 className="fw-bold">Resolved Cases</h5>
                   <p className="display-6 text-success fw-bold mb-0">{stats.resolved}</p>

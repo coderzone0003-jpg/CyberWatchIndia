@@ -19,14 +19,18 @@ function Navbar({ authUser, onLogout }) {
   return (
     <header className="sticky-top">
       <div className="gov-topbar py-2">
-        <div className="container d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center gap-2">
-            <i className="bi bi-shield-shaded text-success"></i>
-            <span className="fw-semibold">Government of India</span>
-          </div>
-          <div className="d-flex align-items-center gap-3">
-            <span className="fw-semibold text-success">Emergency Helpline: 1930</span>
-            <span className="badge bg-success-subtle text-success">Official Portal</span>
+        <div className="container">
+          <div className="gov-topbar-inner">
+            <div className="d-flex align-items-center gap-2">
+              <i className="bi bi-shield-shaded text-success"></i>
+              <span className="fw-semibold gov-topbar-title">Government of India</span>
+            </div>
+            <div className="d-flex align-items-center gap-2 gap-md-3 gov-topbar-meta">
+              <span className="fw-semibold text-success gov-helpline">
+                <span className="d-none d-sm-inline">Emergency Helpline: </span>1930
+              </span>
+              <span className="badge bg-success-subtle text-success">Official Portal</span>
+            </div>
           </div>
         </div>
       </div>
@@ -40,7 +44,7 @@ function Navbar({ authUser, onLogout }) {
             <span className="navbar-toggler-icon"></span>
           </button>
           <div className="collapse navbar-collapse" id="govNavbar">
-            <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+            <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-2 pb-3 pb-lg-0">
               {publicLinks.map((item) => (
                 <li className="nav-item" key={item.to}>
                   <NavLink className={({ isActive }) => `nav-link ${isActive ? 'active fw-semibold' : ''}`} to={item.to}>
@@ -57,23 +61,23 @@ function Navbar({ authUser, onLogout }) {
               ))}
               {!authUser ? (
                 <>
-                  <li className="nav-item ms-lg-3">
-                    <NavLink className="btn btn-outline-success btn-sm" to="/login">Login</NavLink>
+                  <li className="nav-item ms-lg-3 mt-2 mt-lg-0">
+                    <NavLink className="btn btn-outline-success btn-sm w-100 w-lg-auto" to="/login">Login</NavLink>
                   </li>
-                  <li className="nav-item">
-                    <NavLink className="btn btn-success btn-sm" to="/register">Register</NavLink>
+                  <li className="nav-item mt-2 mt-lg-0">
+                    <NavLink className="btn btn-success btn-sm w-100 w-lg-auto" to="/register">Register</NavLink>
                   </li>
                 </>
               ) : (
                 <>
-                  <li className="nav-item">
+                  <li className="nav-item mt-2 mt-lg-0">
                     <Notifications authUser={authUser} />
                   </li>
-                  <li className="nav-item">
-                    <NavLink className="btn btn-outline-success btn-sm" to={String(authUser.role || '').toLowerCase() === 'admin' ? '/admin' : '/dashboard'}>Dashboard</NavLink>
+                  <li className="nav-item mt-2 mt-lg-0">
+                    <NavLink className="btn btn-outline-success btn-sm w-100 w-lg-auto" to={String(authUser.role || '').toLowerCase() === 'admin' ? '/admin' : '/dashboard'}>Dashboard</NavLink>
                   </li>
-                  <li className="nav-item">
-                    <button className="btn btn-outline-danger btn-sm" onClick={onLogout}>Logout</button>
+                  <li className="nav-item mt-2 mt-lg-0">
+                    <button className="btn btn-outline-danger btn-sm w-100 w-lg-auto" onClick={onLogout}>Logout</button>
                   </li>
                 </>
               )}

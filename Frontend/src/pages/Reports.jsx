@@ -97,9 +97,9 @@ function Reports() {
         )}
         
         <div className="contact-form p-4 rounded-4 shadow-sm">
-          <div className="d-flex justify-content-between align-items-center mb-4">
+          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4 page-toolbar">
             <h4 className="fw-bold mb-0">Reports & Analytics</h4>
-            <div className="d-flex gap-2">
+            <div className="d-flex flex-wrap gap-2 page-actions">
               <button 
                 className="btn btn-outline-danger" 
                 onClick={async () => {

@@ -41,7 +41,7 @@ function Home() {
                 <span className="badge bg-white text-success">24/7 Support</span>
                 <span className="badge bg-white text-success">Official Portal</span>
               </div>
-              <h1 className="display-5 fw-bold mb-3">National Cyber Crime Reporting Portal</h1>
+              <h1 className="display-5 fw-bold mb-3 hero-title">National Cyber Crime Reporting Portal</h1>
               <p className="lead text-white-50 mb-4">Report cyber crimes safely and securely with verified government support, evidence guidance, and real-time case tracking.</p>
               <div className="d-flex flex-wrap gap-3">
                 <button className="btn btn-light btn-lg text-success" onClick={handleReportClick}>Report Cyber Crime</button>

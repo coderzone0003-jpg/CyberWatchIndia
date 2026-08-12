@@ -52,6 +52,8 @@ function AppContent() {
     }
   }, []);
 
+  const clearNotice = useCallback(() => setNotice(''), []);
+
   const handleLogin = (user, token) => {
     localStorage.setItem('cyberAuthToken', token);
     localStorage.setItem('cyberAuthUser', JSON.stringify(user));
@@ -92,7 +94,7 @@ function AppContent() {
   return (
     <div className="App">
       <Navbar authUser={authUser} onLogout={handleLogout} />
-      <Notification message={notice} type="success" onClose={() => setNotice('')} />
+      <Notification message={notice} type="success" onClose={clearNotice} autoHideMs={5000} />
       <main>
         <Routes>
           <Route path="/" element={<Home />} />

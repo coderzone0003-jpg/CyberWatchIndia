@@ -225,12 +225,224 @@ main {
   }
 }
 
-@media (max-width: 767px) {
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+.gov-topbar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.gov-topbar-title {
+  font-size: 0.9rem;
+}
+
+.gov-helpline {
+  font-size: 0.85rem;
+}
+
+.hero-title {
+  font-size: clamp(1.75rem, 5vw, 3rem);
+  line-height: 1.2;
+}
+
+.hero-section .btn-lg {
+  width: 100%;
+}
+
+.admin-sidebar-backdrop {
+  display: none;
+}
+
+.admin-sidebar-panel {
+  position: relative;
+}
+
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive > .table {
+  min-width: 640px;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.contact-form .modal-dialog {
+  margin: 0.75rem;
+}
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.page-actions .btn,
+.page-actions .form-control,
+.page-actions .form-select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 991.98px) {
+  .section {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
   .hero-section {
     text-align: center;
   }
 
   .hero-section .d-flex {
+    justify-content: center;
+  }
+
+  .hero-section .btn-lg {
+    max-width: 320px;
+  }
+
+  .display-6 {
+    font-size: 2rem;
+  }
+
+  .contact-form > .d-flex.justify-content-between,
+  .contact-form .page-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem;
+  }
+
+  .contact-form > .d-flex.justify-content-between > .d-flex,
+  .contact-form .page-toolbar .page-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .contact-form > .d-flex.justify-content-between .form-control,
+  .contact-form > .d-flex.justify-content-between .form-select,
+  .contact-form > .d-flex.justify-content-between .btn,
+  .contact-form .page-toolbar .form-control,
+  .contact-form .page-toolbar .form-select,
+  .contact-form .page-toolbar .btn {
+    width: 100%;
+  }
+
+  .admin-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 1040;
+  }
+
+  .admin-sidebar-backdrop.show {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .admin-sidebar-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: min(88vw, 320px);
+    height: 100vh;
+    z-index: 1050;
+    padding: 1rem;
+    transform: translateX(-110%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+  }
+
+  .admin-sidebar-panel.show {
+    transform: translateX(0);
+  }
+
+  .admin-sidebar-panel .sidebar-card {
+    min-height: calc(100vh - 2rem);
+  }
+
+  .admin-content-panel {
+    width: 100%;
+  }
+
+  .toast-show {
+    left: 12px;
+    right: 12px;
+    top: auto;
+    bottom: 16px;
+    min-width: 0;
+  }
+
+  .navbar-brand {
+    font-size: 1rem;
+    max-width: calc(100vw - 4.5rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (min-width: 576px) {
+  .hero-section .btn-lg {
+    width: auto;
+  }
+
+  .page-actions .btn,
+  .page-actions .form-control,
+  .page-actions .form-select {
+    flex: 0 1 auto;
+    min-width: 140px;
+  }
+}
+
+@media (min-width: 992px) {
+  .admin-sidebar-panel {
+    position: static;
+    width: auto;
+    height: auto;
+    transform: none;
+    padding: 0;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .gov-topbar {
+    font-size: 0.8rem;
+  }
+
+  .gov-topbar-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .section-label {
+    font-size: 0.8rem;
+  }
+
+  .contact-form,
+  .hero-card,
+  .feature-card {
+    padding: 1rem !important;
+  }
+
+  .footer {
+    text-align: center;
+  }
+
+  .footer .d-flex.gap-3 {
     justify-content: center;
   }
 }
