@@ -2,13 +2,7 @@
  * Cyber Crime Portal API Server
  * Developers: Shubham Bhojane, Vinanti Bendure, Darshan Seleke, Chaitrali Karale
  */
-const express = require('express');
-const cors = require('cors');
 const dotenv = require('dotenv');
-const morgan = require('morgan');
-const { supabase } = require('./config/supabase');
-const { helmetConfig, apiLimiter } = require('./middleware/security');
-const { sanitizeRequest } = require('./middleware/validation');
 
 dotenv.config();
 
@@ -18,6 +12,15 @@ const PRODUCTION_ORIGINS = [
   'https://cyber-watch-india.vercel.app',
   'https://cyber-watch-india-git-main-coderzone0003-jpg.vercel.app',
 ];
+
+function isRenderHost() {
+  return (
+    process.env.RENDER === 'true' ||
+    Boolean(process.env.RENDER_SERVICE_ID) ||
+    Boolean(process.env.RENDER_EXTERNAL_URL) ||
+    /onrender\.com/i.test(process.env.RENDER_EXTERNAL_HOSTNAME || '')
+  );
+}
 
 function isLocalhostUrl(url) {
   return /localhost|127\.0\.0\.1/i.test(url || '');
@@ -30,7 +33,7 @@ function resolveFrontendUrl() {
     return configured;
   }
 
-  if (process.env.RENDER === 'true') {
+  if (isRenderHost()) {
     console.warn(
       `Using production frontend URL on Render: ${PRODUCTION_FRONTEND_URL}` +
         (configured ? ` (configured FRONTEND_URL was ${configured})` : '')
@@ -41,12 +44,23 @@ function resolveFrontendUrl() {
   return configured || 'http://localhost:3000';
 }
 
-if (process.env.RENDER === 'true' && process.env.NODE_ENV !== 'production') {
-  console.warn('Render detected with NODE_ENV!=production; forcing production mode.');
-  process.env.NODE_ENV = 'production';
+function bootstrapEnvironment() {
+  if (isRenderHost() && process.env.NODE_ENV !== 'production') {
+    console.warn('Render host detected with NODE_ENV!=production; forcing production mode.');
+    process.env.NODE_ENV = 'production';
+  }
+
+  process.env.FRONTEND_URL = resolveFrontendUrl();
 }
 
-process.env.FRONTEND_URL = resolveFrontendUrl();
+bootstrapEnvironment();
+
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+const { supabase } = require('./config/supabase');
+const { helmetConfig, apiLimiter } = require('./middleware/security');
+const { sanitizeRequest } = require('./middleware/validation');
 
 function getAllowedOrigins() {
   const origins = new Set();
@@ -211,6 +225,7 @@ app.get('/ping', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     frontend_url: process.env.FRONTEND_URL,
     allowed_origins: allowedOrigins,
+    render_host: isRenderHost(),
     timestamp: new Date().toISOString(),
   });
 });
@@ -359,6 +374,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Render host: ${isRenderHost()}`);
   console.log(`Frontend URL: ${process.env.FRONTEND_URL}`);
   console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
   console.log(`Health check: /ping`);
