@@ -28,6 +28,33 @@ const getAuthUser = () => {
   return user ? JSON.parse(user) : null;
 };
 
+const downloadAuthenticatedFile = async (endpoint, filename) => {
+  const token = getAuthToken();
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await response.json();
+      throw new Error(data.message || 'Download failed');
+    }
+    throw new Error(`Download failed (${response.status})`);
+  }
+
+  const blob = await response.blob();
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(objectUrl);
+};
+
 /**
  * Make an authenticated API request
  */
@@ -238,15 +265,17 @@ const api = {
   getAdminReports: (filters = {}) =>
     apiRequest(`/api/admin/reports${buildQueryString(filters)}`),
 
-  exportPDF: (filters = {}) => {
-    const url = `${API_URL}/api/admin/export/pdf${buildQueryString(filters)}`;
-    window.open(url, '_blank');
-  },
+  exportPDF: (filters = {}) =>
+    downloadAuthenticatedFile(
+      `/api/admin/export/pdf${buildQueryString(filters)}`,
+      `complaints-report-${Date.now()}.pdf`
+    ),
 
-  exportExcel: (filters = {}) => {
-    const url = `${API_URL}/api/admin/export/excel${buildQueryString(filters)}`;
-    window.open(url, '_blank');
-  },
+  exportExcel: (filters = {}) =>
+    downloadAuthenticatedFile(
+      `/api/admin/export/excel${buildQueryString(filters)}`,
+      `complaints-report-${Date.now()}.xlsx`
+    ),
 
   getAuditLogs: (filters = {}) =>
     apiRequest(`/api/admin/audit-logs${buildQueryString(filters)}`),

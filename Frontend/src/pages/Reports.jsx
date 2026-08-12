@@ -102,12 +102,16 @@ function Reports() {
             <div className="d-flex gap-2">
               <button 
                 className="btn btn-outline-danger" 
-                onClick={() => {
-                  const params = {};
-                  Object.keys(filters).forEach(key => {
-                    if (filters[key]) params[key] = filters[key];
-                  });
-                  api.exportPDF(params);
+                onClick={async () => {
+                  try {
+                    const params = {};
+                    Object.keys(filters).forEach(key => {
+                      if (filters[key]) params[key] = filters[key];
+                    });
+                    await api.exportPDF(params);
+                  } catch (err) {
+                    setError(err.message || 'PDF export failed');
+                  }
                 }}
                 title="Export as PDF"
               >
@@ -115,12 +119,16 @@ function Reports() {
               </button>
               <button 
                 className="btn btn-outline-success" 
-                onClick={() => {
-                  const params = {};
-                  Object.keys(filters).forEach(key => {
-                    if (filters[key]) params[key] = filters[key];
-                  });
-                  api.exportExcel(params);
+                onClick={async () => {
+                  try {
+                    const params = {};
+                    Object.keys(filters).forEach(key => {
+                      if (filters[key]) params[key] = filters[key];
+                    });
+                    await api.exportExcel(params);
+                  } catch (err) {
+                    setError(err.message || 'Excel export failed');
+                  }
                 }}
                 title="Export as Excel"
               >

@@ -8,6 +8,12 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@cyberportal.gov';
 const FROM_NAME = process.env.FROM_NAME || 'Cyber Crime Portal';
 
+function getFrontendUrl(path = '') {
+  const base = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+  if (!path) return base;
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 /**
  * Send an email using Resend
  */
@@ -83,7 +89,7 @@ async function sendComplaintConfirmation({ to, trackingId, title, userName }) {
           
           <p>You can track the status of your complaint using the tracking ID above.</p>
           
-          <a href="http://localhost:3000/track" class="button">Track Your Complaint</a>
+          <a href="${getFrontendUrl('/track')}" class="button">Track Your Complaint</a>
           
           <p>If you have any questions or need to provide additional information, please contact our helpline.</p>
         </div>
@@ -162,7 +168,7 @@ async function sendStatusUpdate({ to, trackingId, title, newStatus, oldStatus })
             <li>New Status: ${newStatus}</li>
           </ul>
           
-          <a href="http://localhost:3000/track" class="button">View Complaint Details</a>
+          <a href="${getFrontendUrl('/track')}" class="button">View Complaint Details</a>
           
           <p>If you have any questions about this status change, please contact our helpline.</p>
         </div>
@@ -237,7 +243,7 @@ async function sendOfficerAssignment({ to, trackingId, title, officerName }) {
           
           <p>Please review the complaint details and begin the investigation process.</p>
           
-          <a href="http://localhost:3000/admin" class="button">View Assigned Complaint</a>
+          <a href="${getFrontendUrl('/admin')}" class="button">View Assigned Complaint</a>
           
           <p>If you have any questions, please contact your supervisor.</p>
         </div>

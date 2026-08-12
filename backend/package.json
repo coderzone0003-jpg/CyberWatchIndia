@@ -19,8 +19,11 @@
     "portal",
     "api"
   ],
-  "author": "",
+  "author": "MR SHUBHAM BHOJANE",
   "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "bcryptjs": "^2.4.3",

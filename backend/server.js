@@ -1,3 +1,7 @@
+/**
+ * Cyber Crime Portal API Server
+ * Developer: MR SHUBHAM BHOJANE
+ */
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -8,9 +12,27 @@ const { sanitizeRequest } = require('./middleware/validation');
 
 dotenv.config();
 
+function getAllowedOrigins() {
+  const origins = new Set();
+  const frontendUrl = (process.env.FRONTEND_URL || '').trim().replace(/\/$/, '');
+  if (frontendUrl) origins.add(frontendUrl);
+
+  (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((value) => value.trim().replace(/\/$/, ''))
+    .filter(Boolean)
+    .forEach((origin) => origins.add(origin));
+
+  if (process.env.NODE_ENV !== 'production') {
+    origins.add('http://localhost:3000');
+    origins.add('http://127.0.0.1:3000');
+  }
+
+  return [...origins];
+}
+
 // Validate required environment variables
 const requiredEnvVars = [
-  'PORT',
   'SUPABASE_URL',
   'SUPABASE_ANON_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
@@ -47,6 +69,10 @@ if (process.env.NODE_ENV === 'production') {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Security middleware
 app.use(helmetConfig);
 
@@ -59,18 +85,21 @@ if (process.env.NODE_ENV === 'production') {
   app.use(morgan('dev'));
 }
 
-// CORS configuration - only allow frontend origin
+// CORS configuration - allow frontend origin(s)
+const allowedOrigins = getAllowedOrigins();
 const corsOptions = {
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:3000',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-  ],
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(null, false);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'x-auth-token', 'Authorization'],
   exposedHeaders: ['x-auth-token'],
-  maxAge: 3600 // 1 hour
+  maxAge: 3600,
 };
 
 app.use(cors(corsOptions));
@@ -249,9 +278,10 @@ app.use((err, req, res, next) => {
 // SERVER STARTUP
 // ============================================
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
-  console.log(`Health check: http://localhost:${PORT}/ping`);
+  console.log(`Frontend URL: ${process.env.FRONTEND_URL}`);
+  console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
+  console.log(`Health check: /ping`);
 });

@@ -101,6 +101,13 @@ router.get('/password-requirements', (req, res) => {
   });
 });
 
+// @route   POST /api/auth/logout
+// @desc    Client logout acknowledgement (Supabase token cleared on client)
+// @access  Private
+router.post('/logout', auth, (req, res) => {
+  res.json({ message: 'Logged out successfully' });
+});
+
 // @route   GET /api/auth/me
 // @desc    Get current user profile with role
 // @access  Private (verified by Supabase auth middleware)
