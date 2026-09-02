@@ -22,7 +22,7 @@ function SafetyTips() {
                 <div className="tip-icon mb-3">
                   <i className={`bi ${tip.icon}`}></i>
                 </div>
-                <h5 className="fw-bold">{tip.title}</h5>
+                <h3 className="fw-bold">{tip.title}</h3>
                 <p className="text-muted mb-0">{tip.text}</p>
               </div>
             </div>

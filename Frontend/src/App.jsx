@@ -123,7 +123,11 @@ function AppContent() {
 
   return (
     <div className="App">
-      <Navbar authUser={userAuth?.user || null} onLogout={handleUserLogout} />
+      <Navbar
+        authUser={userAuth?.user || adminAuth?.user || null}
+        isAdmin={!!adminAuth?.user}
+        onLogout={adminAuth?.user ? handleAdminLogout : handleUserLogout}
+      />
       <Notification message={notice} type="success" onClose={clearNotice} autoHideMs={5000} />
       <main>
         <Routes>

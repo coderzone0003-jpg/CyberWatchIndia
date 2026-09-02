@@ -119,7 +119,7 @@ function ComplaintDetails() {
         <div className="contact-form p-4 rounded-4 shadow-sm">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h4 className="fw-bold mb-0">Complaint Details</h4>
-            <span className={`badge ${complaint.status === 'resolved' ? 'bg-success' : complaint.status === 'under investigation' ? 'bg-warning' : 'bg-secondary'}`}>
+            <span className={`badge ${complaint.status === 'resolved' ? 'bg-success' : complaint.status === 'under investigation' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
               {complaint.status}
             </span>
           </div>
@@ -132,8 +132,8 @@ function ComplaintDetails() {
               <p><strong>Severity:</strong> 
                 <span className={`badge ms-2 ${
                   complaint.severity === 'critical' ? 'bg-danger' :
-                  complaint.severity === 'high' ? 'bg-warning' :
-                  complaint.severity === 'medium' ? 'bg-info' : 'bg-success'
+                  complaint.severity === 'high' ? 'bg-warning text-dark' :
+                  complaint.severity === 'medium' ? 'bg-info text-dark' : 'bg-success'
                 }`}>
                   {complaint.severity}
                 </span>

@@ -162,10 +162,14 @@ function AdminDashboard() {
         </div>
       </div>
 
-      <div className="mt-4">
-        <Link className="btn btn-success me-2" to="/manage-complaints">Manage Complaints</Link>
-        <Link className="btn btn-outline-success me-2" to="/manage-users">Manage Users</Link>
-        <Link className="btn btn-outline-success" to="/reports">View Reports</Link>
+      <div className="row g-4 mt-1">
+        <div className="col-12">
+          <div className="d-flex flex-wrap gap-2">
+            <Link className="btn btn-outline-success" to="/manage-complaints">Manage Complaints</Link>
+            <Link className="btn btn-outline-success" to="/manage-users">Manage Users</Link>
+            <Link className="btn btn-outline-success" to="/reports">View Reports</Link>
+          </div>
+        </div>
       </div>
     </>
   );

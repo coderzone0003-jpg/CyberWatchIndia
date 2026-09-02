@@ -36,7 +36,7 @@ function About() {
                 <div className="feature-icon mb-3">
                   <i className={`bi ${item.icon}`}></i>
                 </div>
-                <h5 className="fw-bold">{item.title}</h5>
+                <h3 className="fw-bold">{item.title}</h3>
                 <p className="text-muted mb-0">{item.text}</p>
               </div>
             </div>

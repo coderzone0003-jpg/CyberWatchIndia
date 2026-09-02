@@ -18,7 +18,7 @@ function Contact() {
             </div>
           </div>
           <div className="col-lg-7">
-            <form className="contact-form p-4 rounded-4 shadow-sm">
+            <form className="contact-form p-4 shadow-sm">
               <div className="row g-3">
                 <div className="col-md-6">
                   <label className="form-label">Name</label>
@@ -37,7 +37,7 @@ function Contact() {
                   <textarea className="form-control" rows="5" placeholder="Describe your concern"></textarea>
                 </div>
                 <div className="col-12">
-                  <button className="btn btn-success px-4" type="button">Send Message</button>
+                  <button className="btn btn-success w-100" type="button">Send Message</button>
                 </div>
               </div>
             </form>

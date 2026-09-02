@@ -55,7 +55,7 @@ function UserDashboard() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-secondary';
-      case 'under investigation': return 'bg-warning';
+      case 'under investigation': return 'bg-warning text-dark';
       case 'resolved': return 'bg-success';
       case 'rejected': return 'bg-danger';
       default: return 'bg-secondary';
@@ -76,7 +76,7 @@ function UserDashboard() {
       <div className="container">
         <div className="text-center mb-4">
           <span className="section-label">Citizen Dashboard</span>
-          <h2 className="fw-bold mt-3">Welcome to your secure portal</h2>
+          <h1 className="fw-bold mt-3">Welcome to your secure portal</h1>
         </div>
 
         {error && (
@@ -100,25 +100,25 @@ function UserDashboard() {
             <div className="row g-4 mb-4">
               <div className="col-6 col-md-3">
                 <div className="feature-card p-4 h-100">
-                  <h5 className="fw-bold">Total Complaints</h5>
+                  <h3 className="fw-bold fs-6">Total Complaints</h3>
                   <p className="display-6 text-success fw-bold mb-0">{stats.total}</p>
                 </div>
               </div>
               <div className="col-6 col-md-3">
                 <div className="feature-card p-4 h-100">
-                  <h5 className="fw-bold">Pending Cases</h5>
+                  <h3 className="fw-bold fs-6">Pending Cases</h3>
                   <p className="display-6 text-warning fw-bold mb-0">{stats.pending}</p>
                 </div>
               </div>
               <div className="col-6 col-md-3">
                 <div className="feature-card p-4 h-100">
-                  <h5 className="fw-bold">Under Investigation</h5>
-                  <p className="display-6 text-info fw-bold mb-0">{stats.investigation}</p>
+                  <h3 className="fw-bold fs-6">Under Investigation</h3>
+                  <p className="display-6 text-warning fw-bold mb-0">{stats.investigation}</p>
                 </div>
               </div>
               <div className="col-6 col-md-3">
                 <div className="feature-card p-4 h-100">
-                  <h5 className="fw-bold">Resolved Cases</h5>
+                  <h3 className="fw-bold fs-6">Resolved Cases</h3>
                   <p className="display-6 text-success fw-bold mb-0">{stats.resolved}</p>
                 </div>
               </div>
@@ -126,10 +126,10 @@ function UserDashboard() {
 
             {recentComplaints.some((c) => getAssignedOfficer(c)) && (
               <div className="contact-form p-4 rounded-4 shadow-sm mb-4">
-                <h5 className="fw-bold mb-3">
+                <h3 className="fw-bold mb-3">
                   <i className="bi bi-person-badge me-2 text-success"></i>
-                  Assigned Case Officers
-                </h5>
+                  Complaints by Officer
+                </h3>
                 <div className="row g-3">
                   {recentComplaints.filter((c) => getAssignedOfficer(c)).map((complaint) => {
                     const officer = getAssignedOfficer(complaint);
@@ -164,7 +164,7 @@ function UserDashboard() {
             <div className="row g-4">
               <div className="col-lg-8">
                 <div className="contact-form p-4 rounded-4 shadow-sm">
-                  <h5 className="fw-bold mb-3">Recent Complaints</h5>
+                  <h3 className="fw-bold mb-3">Recent Complaints</h3>
                   {recentComplaints.length > 0 ? (
                     <div className="table-responsive">
                       <table className="table table-hover">
@@ -180,7 +180,7 @@ function UserDashboard() {
                         <tbody>
                           {recentComplaints.map((complaint) => (
                             <tr key={complaint.id}>
-                              <td>
+                              <td className="tracking-id">
                                 <Link
                                   to={`/complaint-details?id=${complaint.id}`}
                                   className="text-decoration-none"
@@ -189,9 +189,9 @@ function UserDashboard() {
                                 </Link>
                               </td>
                               <td>{complaint.title}</td>
-                              <td>
+                              <td className="officer-cell">
                                 {getAssignedOfficer(complaint) ? (
-                                  <span className="text-success fw-semibold">
+                                  <span className="officer-text text-success fw-semibold">
                                     <i className="bi bi-person-badge me-1"></i>
                                     {formatOfficerSummary(complaint)}
                                   </span>
@@ -199,7 +199,7 @@ function UserDashboard() {
                                   <span className="text-muted">Not assigned yet</span>
                                 )}
                               </td>
-                              <td>
+                              <td className="align-middle">
                                 <span className={`badge ${getStatusColor(complaint.status)}`}>
                                   {complaint.status}
                                 </span>
@@ -223,7 +223,7 @@ function UserDashboard() {
               </div>
               <div className="col-lg-4">
                 <div className="contact-form p-4 rounded-4 shadow-sm">
-                  <h5 className="fw-bold mb-3">Quick Actions</h5>
+                  <h3 className="fw-bold mb-3">Quick Actions</h3>
                   <div className="d-grid gap-2">
                     <Link className="btn btn-success" to="/my-complaints">
                       View All Complaints

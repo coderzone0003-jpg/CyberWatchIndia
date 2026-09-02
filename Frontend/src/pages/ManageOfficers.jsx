@@ -142,8 +142,8 @@ function ManageOfficers() {
                               {officer.workload.total} Total
                             </span>
                             <div className="small text-muted mt-1">
-                              <span className="badge bg-warning me-1">{officer.workload.pending} Pending</span>
-                              <span className="badge bg-info me-1">{officer.workload.investigation} Active</span>
+                              <span className="badge bg-warning text-dark me-1">{officer.workload.pending} Pending</span>
+                              <span className="badge bg-info text-dark me-1">{officer.workload.investigation} Active</span>
                               <span className="badge bg-success">{officer.workload.resolved} Resolved</span>
                             </div>
                           </div>

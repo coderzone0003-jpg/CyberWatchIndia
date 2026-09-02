@@ -15,7 +15,7 @@ const authenticatedLinks = [
   { to: '/track', label: 'Track Complaint' }
 ];
 
-function Navbar({ authUser, onLogout }) {
+function Navbar({ authUser, isAdmin, onLogout }) {
   return (
     <header className="sticky-top">
       <div className="gov-topbar py-2">
@@ -45,14 +45,14 @@ function Navbar({ authUser, onLogout }) {
           </button>
           <div className="collapse navbar-collapse" id="govNavbar">
             <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-2 pb-3 pb-lg-0">
-              {publicLinks.map((item) => (
+              {!authUser && publicLinks.map((item) => (
                 <li className="nav-item" key={item.to}>
                   <NavLink className={({ isActive }) => `nav-link ${isActive ? 'active fw-semibold' : ''}`} to={item.to}>
                     {item.label}
                   </NavLink>
                 </li>
               ))}
-              {authUser && authenticatedLinks.map((item) => (
+              {authUser && !isAdmin && authenticatedLinks.map((item) => (
                 <li className="nav-item" key={item.to}>
                   <NavLink className={({ isActive }) => `nav-link ${isActive ? 'active fw-semibold' : ''}`} to={item.to}>
                     {item.label}
@@ -74,7 +74,7 @@ function Navbar({ authUser, onLogout }) {
                     <Notifications authUser={authUser} />
                   </li>
                   <li className="nav-item mt-2 mt-lg-0">
-                    <NavLink className="btn btn-outline-success btn-sm w-100 w-lg-auto" to="/dashboard">Dashboard</NavLink>
+                    <NavLink className="btn btn-outline-success btn-sm w-100 w-lg-auto" to={isAdmin ? '/admin' : '/dashboard'}>Dashboard</NavLink>
                   </li>
                   <li className="nav-item mt-2 mt-lg-0">
                     <button className="btn btn-outline-danger btn-sm w-100 w-lg-auto" onClick={onLogout}>Logout</button>

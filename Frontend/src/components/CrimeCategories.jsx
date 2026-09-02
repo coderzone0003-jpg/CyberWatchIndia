@@ -24,7 +24,7 @@ function CrimeCategories() {
             <div className="col-sm-6 col-lg-3" key={category}>
               <div className="category-card p-4 h-100 text-center">
                 <i className="bi bi-shield-fill-check display-6 text-success mb-3"></i>
-                <h5 className="fw-bold">{category}</h5>
+                <h3 className="fw-bold">{category}</h3>
               </div>
             </div>
           ))}

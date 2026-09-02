@@ -181,7 +181,7 @@ function TrackComplaint() {
                   <p className="mb-1"><strong>Status:</strong> 
                     <span className={`badge ms-2 ${
                       complaint.status === 'resolved' ? 'bg-success' :
-                      complaint.status === 'under investigation' ? 'bg-warning' :
+                      complaint.status === 'under investigation' ? 'bg-warning text-dark' :
                       complaint.status === 'pending' ? 'bg-secondary' : 'bg-danger'
                     }`}>
                       {complaint.status}

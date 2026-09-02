@@ -315,7 +315,7 @@ function Reports() {
                             {Object.entries(stats.by_severity).map(([severity, count], index) => {
                               const badgeClass = {
                                 'low': 'bg-success',
-                                'medium': 'bg-warning',
+                                'medium': 'bg-warning text-dark',
                                 'high': 'bg-danger',
                                 'critical': 'bg-dark'
                               }[severity] || 'bg-secondary';

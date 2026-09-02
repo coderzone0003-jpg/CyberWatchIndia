@@ -22,9 +22,9 @@ function Sidebar({ onLogout, onNavigate, onClose }) {
         </button>
       </div>
 
-      <div className="text-center mb-4 d-none d-lg-block">
-        <div className="sidebar-brand">C</div>
-        <h6 className="fw-bold mt-3 mb-0">Cyber Command</h6>
+      <div className="text-center mb-3 d-none d-lg-block">
+        <div className="sidebar-brand" style={{ width: '44px', height: '44px', fontSize: '1.1rem' }}>C</div>
+        <h6 className="fw-bold mt-2 mb-0">Cyber Command</h6>
         <small className="text-muted">Government Control Center</small>
       </div>
 

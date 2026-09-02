@@ -67,16 +67,16 @@ function AuditLogs() {
   const getActionBadge = (action) => {
     const badgeStyles = {
       'USER_REGISTERED': 'bg-success',
-      'USER_LOGIN': 'bg-info',
+      'USER_LOGIN': 'bg-info text-dark',
       'USER_LOGOUT': 'bg-secondary',
       'COMPLAINT_CREATED': 'bg-primary',
-      'COMPLAINT_UPDATED': 'bg-warning',
+      'COMPLAINT_UPDATED': 'bg-warning text-dark',
       'COMPLAINT_DELETED': 'bg-danger',
-      'OFFICER_ASSIGNED': 'bg-info',
-      'STATUS_CHANGED': 'bg-warning',
+      'OFFICER_ASSIGNED': 'bg-info text-dark',
+      'STATUS_CHANGED': 'bg-warning text-dark',
       'EVIDENCE_DELETED': 'bg-danger',
       'CATEGORY_CREATED': 'bg-success',
-      'CATEGORY_UPDATED': 'bg-warning',
+      'CATEGORY_UPDATED': 'bg-warning text-dark',
       'CATEGORY_DELETED': 'bg-danger'
     };
     return badgeStyles[action] || 'bg-secondary';
@@ -112,7 +112,7 @@ function AuditLogs() {
         
         <div className="contact-form p-4 rounded-4 shadow-sm">
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h4 className="fw-bold mb-0">Audit Logs</h4>
+            <h1 className="h3 fw-bold mb-0">Audit Logs</h1>
             <button className="btn btn-success" onClick={fetchAuditLogs}>
               <i className="bi bi-arrow-clockwise me-2"></i>Refresh
             </button>

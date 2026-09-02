@@ -2,8 +2,8 @@ import React from 'react';
 
 function Helpline() {
   return (
-    <section className="section py-5 bg-success text-white">
-      <div className="container">
+    <section className="py-3 bg-success text-white">
+      <div className="container py-2">
         <div className="row align-items-center g-4">
           <div className="col-lg-7">
             <span className="section-label text-white-50">Emergency Support</span>
@@ -11,18 +11,27 @@ function Helpline() {
             <p className="mb-0">Use the national cyber helpline or emergency services for urgent cases.</p>
           </div>
           <div className="col-lg-5">
-            <div className="helpline-card p-4 rounded-4">
+            <div className="helpline-card p-4">
               <div className="d-flex justify-content-between mb-3">
                 <span><i className="bi bi-phone-fill me-2"></i>Cyber Helpline</span>
-                <strong>1930</strong>
+                <div className="text-end">
+                  <strong>1930</strong>
+                  <br /><small className="text-muted">24/7</small>
+                </div>
               </div>
               <div className="d-flex justify-content-between mb-3">
                 <span><i className="bi bi-telephone-fill me-2"></i>Police</span>
-                <strong>112</strong>
+                <div className="text-end">
+                  <strong>112</strong>
+                  <br /><small className="text-muted">Emergency</small>
+                </div>
               </div>
               <div className="d-flex justify-content-between">
                 <span><i className="bi bi-envelope-fill me-2"></i>Email Support</span>
-                <strong>support@cyberportal.gov</strong>
+                <div className="text-end">
+                  <strong>support@cyberportal.gov</strong>
+                  <br /><small className="text-muted">Response within 24 hrs</small>
+                </div>
               </div>
             </div>
           </div>

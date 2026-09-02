@@ -1,5 +1,6 @@
 :root {
   --primary-green: #16A34A;
+  --dark-green: #14532d;
   --light-green: #84CC16;
   --accent: #DCFE7D;
   --background: #F0FDF4;
@@ -57,7 +58,7 @@ html {
 .helpline-card,
 .sidebar-card {
   background: var(--white-bg);
-  border-radius: 1.25rem;
+  border-radius: 0.75rem;
   box-shadow: 0 12px 30px rgba(22, 163, 74, 0.12);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   color: #000;
@@ -95,7 +96,7 @@ html {
 .section-label {
   display: inline-block;
   background: var(--accent);
-  color: var(--primary-green);
+  color: var(--dark-green);
   padding: 0.4rem 0.8rem;
   border-radius: 999px;
   font-weight: 600;
@@ -118,7 +119,7 @@ html {
 .contact-form .form-control,
 .contact-form .form-select {
   border: 1px solid #cfead8;
-  border-radius: 0.8rem;
+  border-radius: 0.75rem;
 }
 
 .status-dot {
@@ -135,7 +136,7 @@ html {
 .sidebar-link {
   display: block;
   padding: 0.75rem 0.9rem;
-  border-radius: 0.8rem;
+  border-radius: 0.75rem;
   color: #123;
   text-decoration: none;
 }
@@ -143,7 +144,7 @@ html {
 .sidebar-link.active,
 .sidebar-link:hover {
   background: var(--accent);
-  color: var(--primary-green);
+  color: var(--dark-green);
 }
 
 .sidebar-brand {
@@ -167,7 +168,7 @@ html {
 
 .loading-card {
   padding: 2rem;
-  border-radius: 1.5rem;
+  border-radius: 0.75rem;
   background: var(--white-bg);
   box-shadow: 0 12px 30px rgba(22, 163, 74, 0.12);
 }
@@ -209,6 +210,10 @@ main {
   padding-bottom: 1rem;
 }
 
+.footer .text-muted {
+  color: #bfdbfe !important;
+}
+
 .footer a,
 .social-link {
   color: #bfdbfe;
@@ -223,6 +228,14 @@ main {
   to {
     transform: rotate(360deg);
   }
+}
+
+.text-muted {
+  color: #5a6268 !important;
+}
+
+.btn-light.text-success {
+  color: var(--dark-green) !important;
 }
 
 /* ============================================
@@ -273,6 +286,35 @@ main {
 .table td,
 .table th {
   vertical-align: middle;
+}
+
+.table .badge {
+  display: inline-flex;
+  align-items: center;
+}
+
+.officer-cell {
+  white-space: nowrap;
+}
+
+.officer-cell .officer-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-outline-success {
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-outline-success:hover {
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+}
+
+.tracking-id {
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
 }
 
 .contact-form .modal-dialog {

@@ -85,7 +85,7 @@ function MyComplaints() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-secondary';
-      case 'under investigation': return 'bg-warning';
+      case 'under investigation': return 'bg-warning text-dark';
       case 'resolved': return 'bg-success';
       case 'rejected': return 'bg-danger';
       case 'closed': return 'bg-dark';
