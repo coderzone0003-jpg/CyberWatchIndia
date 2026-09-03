@@ -28,6 +28,43 @@ function ReportCrime() {
   const [categories, setCategories] = useState([]);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [showLocationModal, setShowLocationModal] = useState(true);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationStatus, setLocationStatus] = useState('');
+
+  const requestLocationPermission = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser');
+      setShowLocationModal(false);
+      return;
+    }
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const data = await res.json();
+          const placeName = data.display_name || `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`;
+          setFormData(prev => ({ ...prev, location: placeName }));
+          setLocationStatus('Location detected successfully via GPS!');
+        } catch {
+          setFormData(prev => ({ ...prev, location: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}` }));
+          setLocationStatus('GPS coordinates captured successfully!');
+        } finally {
+          setLocationLoading(false);
+          setShowLocationModal(false);
+        }
+      },
+      (error) => {
+        console.warn('Geolocation error:', error.message);
+        setLocationLoading(false);
+        setShowLocationModal(false);
+        setError('Location permission denied or unavailable. Please enter your location manually.');
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -458,6 +495,52 @@ function ReportCrime() {
 
   return (
     <section className="section py-5">
+      {/* Location Permission Modal */}
+      {showLocationModal && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 rounded-4 shadow-lg p-4">
+              <div className="modal-header border-0 pb-0 justify-content-center">
+                <div className="bg-success-subtle text-success rounded-circle p-3 mb-2">
+                  <i className="bi bi-geo-alt-fill fs-2"></i>
+                </div>
+              </div>
+              <div className="modal-body text-center pt-0">
+                <h4 className="fw-bold mb-3">Location Permission Required</h4>
+                <p className="text-muted mb-4">
+                  SHIELD.AI requires access to your current location to automatically tag the incident site for rapid response and emergency dispatch.
+                </p>
+                <div className="d-grid gap-2">
+                  <button 
+                    type="button" 
+                    className="btn btn-success btn-lg rounded-pill fw-semibold" 
+                    onClick={requestLocationPermission}
+                    disabled={locationLoading}
+                  >
+                    {locationLoading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Detecting Location...
+                      </>
+                    ) : (
+                      'Grant Location Permission'
+                    )}
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-outline-secondary rounded-pill" 
+                    onClick={() => setShowLocationModal(false)}
+                    disabled={locationLoading}
+                  >
+                    Skip / Enter Manually
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container">
         <div className="text-center mb-4">
           <span className="section-label">Official Complaint Filing</span>
@@ -670,7 +753,17 @@ function ReportCrime() {
                     <small className="text-muted">Cannot be in the future</small>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Location (City / State)</label>
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <label className="form-label mb-0">Location (City / State)</label>
+                      <button 
+                        type="button" 
+                        className="btn btn-sm btn-outline-success py-0 px-2"
+                        onClick={requestLocationPermission}
+                        disabled={locationLoading}
+                      >
+                        <i className="bi bi-geo-alt-fill me-1"></i> Detect GPS Location
+                      </button>
+                    </div>
                     <input
                       className={`form-control ${renderFieldErrorClass('location')}`}
                       placeholder="e.g. Mumbai, Maharashtra"
@@ -680,6 +773,7 @@ function ReportCrime() {
                       disabled={loading}
                     />
                     {fieldErrors.location && <div className="invalid-feedback">{fieldErrors.location}</div>}
+                    {locationStatus && <small className="text-success d-block mt-1"><i className="bi bi-check-circle me-1"></i>{locationStatus}</small>}
                     <small className="text-muted">Used for jurisdictional routing</small>
                   </div>
                   <div className="col-12">

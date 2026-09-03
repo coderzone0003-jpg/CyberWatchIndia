@@ -229,21 +229,7 @@ router.post('/', auth, complaintLimiter, uploadMultiple, sanitizeRequest, valida
       return res.status(400).json({ message: 'Invalid category' });
     }
 
-    // Handle file uploads if present
-    const uploadedFiles = [];
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        try {
-          const uploadedFile = await uploadFile(file, req.user.userId);
-          uploadedFiles.push(uploadedFile);
-        } catch (uploadError) {
-          console.error('File upload error:', uploadError);
-          // Continue with other files even if one fails
-        }
-      }
-    }
-
-    // Create complaint
+    // 1. Create complaint first to get complaint ID
     const newComplaint = await complaintOperations.create({
       title: sanitizedData.title,
       description: sanitizedData.description,
@@ -254,19 +240,24 @@ router.post('/', auth, complaintLimiter, uploadMultiple, sanitizeRequest, valida
       incident_date: sanitizedData.incident_date
     });
 
-    // Create evidence records for uploaded files
-    if (uploadedFiles.length > 0) {
-      for (const file of uploadedFiles) {
+    // 2. Handle file uploads if present, using complaint ID
+    const uploadedFiles = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
         try {
+          const uploadedFile = await uploadFile(file, req.user.userId, newComplaint.id);
+          uploadedFiles.push(uploadedFile);
+
+          // Save evidence record
           await evidenceOperations.create({
             complaint_id: newComplaint.id,
-            file_path: file.path,
-            file_name: file.filename,
-            file_type: file.mimeType,
-            file_size: file.size
+            file_path: uploadedFile.path,
+            file_name: uploadedFile.filename,
+            file_type: uploadedFile.mimeType,
+            file_size: uploadedFile.size
           });
-        } catch (evidenceError) {
-          console.error('Error saving evidence record, skipping:', evidenceError);
+        } catch (uploadError) {
+          console.error('File upload or evidence record error:', uploadError);
         }
       }
     }

@@ -36,14 +36,15 @@ function guessMimeType(filename) {
 }
 
 /**
- * List evidence files in storage for a user folder
+ * List evidence files in storage for a user folder or complaint
  */
-async function listFilesForUser(userId) {
+async function listFilesForUser(userId, complaintId = null) {
   if (!userId) return [];
 
+  const folder = complaintId ? `${userId}/${complaintId}` : String(userId);
   const { data, error } = await supabaseAdmin.storage
     .from(BUCKET_NAME)
-    .list(String(userId), {
+    .list(folder, {
       limit: 100,
       sortBy: { column: 'created_at', order: 'desc' },
     });
@@ -56,7 +57,7 @@ async function listFilesForUser(userId) {
   return (data || [])
     .filter((item) => item?.name && !item.name.endsWith('/'))
     .map((item) => ({
-      file_path: `${userId}/${item.name}`,
+      file_path: complaintId ? `${userId}/${complaintId}/${item.name}` : `${userId}/${item.name}`,
       file_name: item.name.replace(/^\d+_/, ''),
       file_type: guessMimeType(item.name),
       file_size: item.metadata?.size || item.metadata?.contentLength || 0,
@@ -118,10 +119,10 @@ function sanitizeFilename(filename) {
 /**
  * Upload file to Supabase Storage
  */
-async function uploadFile(file, userId) {
+async function uploadFile(file, userId, complaintId = null) {
   try {
     const sanitizedFilename = sanitizeFilename(file.originalname);
-    const filePath = `${userId}/${sanitizedFilename}`;
+    const filePath = complaintId ? `${userId}/${complaintId}/${sanitizedFilename}` : `${userId}/${sanitizedFilename}`;
 
     // Upload file to Supabase Storage
     const { data, error } = await supabaseAdmin

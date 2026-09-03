@@ -45,7 +45,11 @@ function MyComplaints() {
       apiFilters.offset = (currentPage - 1) * itemsPerPage;
 
       const data = await api.getMyComplaints(apiFilters);
-      setComplaints(data.complaints || []);
+      const rawComplaints = data.complaints || [];
+      const sortedComplaints = [...rawComplaints].sort(
+        (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+      );
+      setComplaints(sortedComplaints);
       setTotalItems(data.pagination?.total || 0);
     } catch (err) {
       console.error('Failed to fetch complaints:', err);

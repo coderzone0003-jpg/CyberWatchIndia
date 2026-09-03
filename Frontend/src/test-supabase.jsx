@@ -3,8 +3,8 @@ import { supabase } from './config/supabase';
 async function testConnection() {
   try {
     console.log('Testing Supabase connection...');
-    console.log('URL:', import.meta.env.REACT_APP_SUPABASE_URL);
-    console.log('Anon Key:', import.meta.env.REACT_APP_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
+    console.log('URL:', process.env.REACT_APP_SUPABASE_URL);
+    console.log('Anon Key:', process.env.REACT_APP_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
     
     const { data, error } = await supabase.from('users').select('count', { count: 'exact', head: true });
     

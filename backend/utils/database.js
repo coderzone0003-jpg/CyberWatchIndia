@@ -529,7 +529,7 @@ const evidenceOperations = {
       return { files: dbFiles, source: 'database', tableMissing: false };
     }
 
-    const storageFiles = await listFilesForUser(complaint.user_id);
+    const storageFiles = await listFilesForUser(complaint.user_id, complaint.id);
     const files = storageFiles.map((file) => ({
       id: file.file_path,
       complaint_id: complaint.id,

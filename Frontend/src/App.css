@@ -429,7 +429,7 @@ main {
 
   .navbar-brand {
     font-size: 1rem;
-    max-width: calc(100vw - 4.5rem);
+    max-width: calc(100% - 4.5rem);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

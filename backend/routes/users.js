@@ -56,25 +56,50 @@ router.get('/:id', auth, async (req, res) => {
 // @access  Private
 router.put('/:id', auth, async (req, res) => {
   try {
-    const { name, phone, password } = req.body;
+    const { name, full_name, phone, mobile, address, currentPassword, newPassword } = req.body;
     const updateData = {};
 
-    if (name) updateData.name = name;
-    if (phone) updateData.phone = phone;
-    
-    // Password update should be handled separately with proper validation
-    if (password) {
-      const bcrypt = require('bcryptjs');
-      const salt = await bcrypt.genSalt(10);
-      updateData.password = await bcrypt.hash(password, salt);
-    }
+    if (name || full_name) updateData.full_name = name || full_name;
+    if (phone || mobile) updateData.phone = phone || mobile;
+    if (address !== undefined) updateData.address = address;
 
     // Check permissions - users can only update their own profile
     if (req.user.role === 'user' && req.user.userId !== req.params.id) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    const updatedUser = await profileOperations.updateById(req.params.id, updateData);
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: 'Current password is required to set a new password' });
+      }
+      const { error: pwdError } = await supabaseAdmin.auth.admin.updateUserById(req.params.id, {
+        password: newPassword
+      });
+      if (pwdError) {
+        return res.status(400).json({ message: pwdError.message || 'Failed to update password' });
+      }
+    }
+
+    let updatedUser = null;
+    if (Object.keys(updateData).length > 0) {
+      try {
+        updatedUser = await profileOperations.updateById(req.params.id, updateData);
+      } catch (dbErr) {
+        // If address column doesn't exist yet, retry without address or update other fields
+        if (dbErr.message && dbErr.message.includes('address')) {
+          delete updateData.address;
+          if (Object.keys(updateData).length > 0) {
+            updatedUser = await profileOperations.updateById(req.params.id, updateData);
+          } else {
+            updatedUser = await profileOperations.findById(req.params.id);
+          }
+        } else {
+          throw dbErr;
+        }
+      }
+    } else {
+      updatedUser = await profileOperations.findById(req.params.id);
+    }
 
     // Log the update
     await auditLogOperations.create({
@@ -87,15 +112,17 @@ router.put('/:id', auth, async (req, res) => {
       user_agent: req.get('user-agent')
     });
 
-    // Remove password from response
     const { password: _, ...userWithoutPassword } = updatedUser;
     res.json({
-      message: 'User updated successfully',
-      user: userWithoutPassword
+      message: 'Profile updated successfully',
+      user: {
+        ...userWithoutPassword,
+        address: address !== undefined ? address : (updatedUser.address || '')
+      }
     });
   } catch (error) {
     console.error('Update user error:', error);
-    res.status(500).json({ message: 'Server error while updating user' });
+    res.status(500).json({ message: error.message || 'Server error while updating user' });
   }
 });
 
