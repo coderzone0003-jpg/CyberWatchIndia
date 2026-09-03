@@ -221,6 +221,8 @@ function Profile() {
                     <label className="form-label">Mobile</label>
                     <input
                       type="tel"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       className="form-control"
                       name="phone"
                       value={formData.phone}

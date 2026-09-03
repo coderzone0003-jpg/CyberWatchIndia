@@ -254,6 +254,9 @@ const api = {
   getComplaintCategories: () => 
     fetch(`${API_URL}/api/complaints/categories`).then(res => res.json()),
 
+  getComplaintStatistics: () =>
+    fetch(`${API_URL}/api/complaints/statistics`).then(res => res.json()),
+
   getMyComplaints: (filters = {}) =>
     apiRequest(`/api/complaints/my${buildQueryString(filters)}`),
 
@@ -397,6 +400,45 @@ const api = {
     apiRequest(`/api/admin/categories/${id}`, {
       method: 'DELETE',
     }),
+
+  // Contact Messages (Public)
+  submitContactMessage: (contactData) =>
+    apiRequest('/api/contact', {
+      method: 'POST',
+      body: JSON.stringify(contactData),
+    }),
+
+  // Contact Messages (Admin)
+  getContactMessages: (filters = {}) =>
+    apiRequest(`/api/contact${buildQueryString(filters)}`),
+
+  getContactMessageById: (id) =>
+    apiRequest(`/api/contact/${id}`),
+
+  updateContactStatus: (id, status) =>
+    apiRequest(`/api/contact/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    }),
+
+  toggleContactRead: (id) =>
+    apiRequest(`/api/contact/${id}/read`, {
+      method: 'PUT',
+    }),
+
+  deleteContactMessage: (id) =>
+    apiRequest(`/api/contact/${id}`, {
+      method: 'DELETE',
+    }),
+
+  bulkContactAction: (ids, action) =>
+    apiRequest('/api/contact/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ ids, action }),
+    }),
+
+  getContactStats: () =>
+    apiRequest('/api/contact/stats'),
 
   // Notifications
   getNotifications: () =>

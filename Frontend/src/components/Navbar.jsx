@@ -74,20 +74,84 @@ function Navbar({ authUser, isAdmin, onLogout }) {
           </div>
         </div>
         <nav className="navbar navbar-expand-lg navbar-light shadow-sm bg-white">
-          <div className="container">
+          <div className="container d-flex justify-content-between align-items-center">
             <Link className="navbar-brand fw-bold text-success d-flex align-items-center gap-2" to="/" onClick={closeMenu}>
               <i className="bi bi-shield-lock-fill text-success fs-4"></i>
               Cyber Crime Portal
             </Link>
-            <button 
-              className="navbar-toggler" 
-              type="button" 
-              onClick={() => setIsOpen(!isOpen)}
-              aria-expanded={isOpen}
-              aria-label="Toggle navigation"
-            >
-              <span className="navbar-toggler-icon"></span>
-            </button>
+
+            {/* Right side controls on mobile (Profile Icon + Hamburger Toggler) */}
+            <div className="d-flex align-items-center gap-2 d-lg-none">
+              {authUser && (
+                <>
+                  <Notifications authUser={authUser} />
+                  <div className="dropdown">
+                    <button
+                      className="nav-link dropdown-toggle d-flex align-items-center gap-1 text-dark text-decoration-none py-1 px-2 rounded-pill border bg-light btn btn-link"
+                      id="mobileProfileDropdown"
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <i className="bi bi-person-circle fs-5 text-success"></i>
+                    </button>
+                    <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-2 mt-2" aria-labelledby="mobileProfileDropdown">
+                      <li>
+                        <div className="dropdown-item-text text-muted small pb-2 border-bottom mb-2">
+                          Signed in as<br />
+                          <strong className="text-dark text-truncate d-block" style={{ maxWidth: '180px' }}>
+                            {authUser.email || 'User'}
+                          </strong>
+                        </div>
+                      </li>
+                      <li>
+                        <Link className="dropdown-item py-2 d-flex align-items-center gap-2" to={isAdmin ? '/admin' : '/dashboard'} onClick={closeMenu}>
+                          <i className="bi bi-speedometer2 text-success"></i> Dashboard
+                        </Link>
+                      </li>
+                      <li>
+                        <Link className="dropdown-item py-2 d-flex align-items-center gap-2" to="/profile" onClick={closeMenu}>
+                          <i className="bi bi-person-badge text-success"></i> My Profile
+                        </Link>
+                      </li>
+                      <li>
+                        <button 
+                          className="dropdown-item py-2 d-flex align-items-center gap-2" 
+                          onClick={() => {
+                            setShowAuthorsModal(true);
+                            closeMenu();
+                          }}
+                        >
+                          <i className="bi bi-code-slash text-success"></i> Developers Team
+                        </button>
+                      </li>
+                      <li><hr className="dropdown-divider my-1" /></li>
+                      <li>
+                        <button 
+                          className="dropdown-item py-2 d-flex align-items-center gap-2 text-danger" 
+                          onClick={() => {
+                            onLogout();
+                            closeMenu();
+                          }}
+                        >
+                          <i className="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </>
+              )}
+              <button 
+                className="navbar-toggler ms-1" 
+                type="button" 
+                onClick={() => setIsOpen(!isOpen)}
+                aria-expanded={isOpen}
+                aria-label="Toggle navigation"
+              >
+                <span className="navbar-toggler-icon"></span>
+              </button>
+            </div>
+
             <div className={`collapse navbar-collapse ${isOpen ? 'show' : ''}`} id="govNavbar">
               <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-3 pb-3 pb-lg-0">
                 {!authUser && publicLinks.map((item) => (
@@ -139,12 +203,12 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                   </>
                 ) : (
                   <>
-                    <li className="nav-item mt-2 mt-lg-0">
+                    {/* Desktop Notifications & Profile Dropdown */}
+                    <li className="nav-item mt-2 mt-lg-0 d-none d-lg-block">
                       <Notifications authUser={authUser} />
                     </li>
 
-                    {/* Profile Icon Dropdown */}
-                    <li className="nav-item dropdown ms-lg-2 mt-2 mt-lg-0">
+                    <li className="nav-item dropdown ms-lg-2 mt-2 mt-lg-0 d-none d-lg-block">
                       <button
                         className="nav-link dropdown-toggle d-flex align-items-center gap-2 text-dark text-decoration-none py-1 px-2 rounded-pill border bg-light btn btn-link"
                         id="profileDropdown"

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "6e9c7f03-725c-4abf-a8d6-a75951c52609",
+    "name": "Coder Zone",
+    "email": "coderzone0003@gmail.com",
+    "phone": "9876544332",
+    "subject": "hello",
+    "message": "my name is friend",
+    "status": "new",
+    "is_read": false,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "created_at": "2026-09-03T17:46:33.941Z",
+    "updated_at": "2026-09-03T17:46:33.941Z"
+  }
+]

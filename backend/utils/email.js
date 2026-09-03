@@ -418,11 +418,71 @@ async function sendVerificationEmail({ to, verificationLink, userName }) {
   return sendEmail({ to, subject, html, text });
 }
 
+/**
+ * Send notification to admin when a new contact message is received
+ */
+async function sendContactMessageNotification({ name, email, phone, subject: msgSubject, message, createdAt }) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@cyberportal.gov';
+  const subject = `[Contact Us] New Message from ${name}: ${msgSubject}`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>New Contact Us Message</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #16A34A; color: white; padding: 15px; border-radius: 6px; text-align: center; }
+        .content { background: #f9f9f9; padding: 20px; border-radius: 6px; margin-top: 15px; }
+        .field { margin-bottom: 10px; }
+        .label { font-weight: bold; color: #16A34A; }
+        .message-box { background: #fff; padding: 15px; border-left: 4px solid #16A34A; border-radius: 4px; margin-top: 10px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>New Contact Us Message Received</h2>
+        </div>
+        <div class="content">
+          <div class="field"><span class="label">Sender:</span> ${name}</div>
+          <div class="field"><span class="label">Email:</span> ${email}</div>
+          <div class="field"><span class="label">Phone:</span> ${phone || 'Not provided'}</div>
+          <div class="field"><span class="label">Subject:</span> ${msgSubject}</div>
+          <div class="field"><span class="label">Received:</span> ${createdAt || new Date().toLocaleString('en-IN')}</div>
+          <div class="field">
+            <span class="label">Message:</span>
+            <div class="message-box">${message.replace(/\n/g, '<br>')}</div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const text = `
+    New Contact Us Message Received:
+    Sender: ${name}
+    Email: ${email}
+    Phone: ${phone || 'Not provided'}
+    Subject: ${msgSubject}
+    Date: ${createdAt || new Date().toLocaleString('en-IN')}
+    
+    Message:
+    ${message}
+  `;
+
+  return sendEmail({ to: adminEmail, subject, html, text });
+}
+
 module.exports = {
   sendEmail,
   sendComplaintConfirmation,
   sendStatusUpdate,
   sendOfficerAssignment,
   sendPasswordResetEmail,
-  sendVerificationEmail
+  sendVerificationEmail,
+  sendContactMessageNotification
 };

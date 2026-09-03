@@ -125,6 +125,29 @@ router.get('/categories', async (req, res) => {
   }
 });
 
+// @route   GET /api/complaints/statistics
+// @desc    Get public complaint statistics from database
+// @access  Public
+router.get('/statistics', async (req, res) => {
+  try {
+    const stats = await complaintOperations.getStatistics();
+    const resolvedCount = (stats.by_status && (stats.by_status['resolved'] || stats.by_status['Resolved'])) || 0;
+    const pendingCount = (stats.by_status && (stats.by_status['pending'] || stats.by_status['Pending'])) || 0;
+    const total = stats.total || 0;
+    const successRate = total > 0 ? Math.round((resolvedCount / total) * 100) : 0;
+
+    res.json({
+      total_complaints: total,
+      resolved_cases: resolvedCount,
+      pending_cases: pendingCount,
+      success_rate: `${successRate}%`
+    });
+  } catch (error) {
+    console.error('Get statistics error:', error);
+    res.status(500).json({ message: 'Server error while fetching statistics' });
+  }
+});
+
 // @route   GET /api/complaints
 // @desc    Get all complaints (with filters and search)
 // @access  Private (Admin/Officer)

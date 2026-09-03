@@ -714,11 +714,287 @@ const auditLogOperations = {
   }
 };
 
+// ============================================
+// CONTACT MESSAGES OPERATIONS
+// ============================================
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+const LOCAL_CONTACTS_FILE = path.join(__dirname, '..', 'data', 'contact_messages.json');
+
+function getLocalContacts() {
+  try {
+    if (!fs.existsSync(path.dirname(LOCAL_CONTACTS_FILE))) {
+      fs.mkdirSync(path.dirname(LOCAL_CONTACTS_FILE), { recursive: true });
+    }
+    if (!fs.existsSync(LOCAL_CONTACTS_FILE)) {
+      fs.writeFileSync(LOCAL_CONTACTS_FILE, JSON.stringify([]));
+      return [];
+    }
+    const raw = fs.readFileSync(LOCAL_CONTACTS_FILE, 'utf8');
+    return JSON.parse(raw || '[]');
+  } catch (err) {
+    console.error('Error reading local contacts:', err);
+    return [];
+  }
+}
+
+function saveLocalContacts(contacts) {
+  try {
+    if (!fs.existsSync(path.dirname(LOCAL_CONTACTS_FILE))) {
+      fs.mkdirSync(path.dirname(LOCAL_CONTACTS_FILE), { recursive: true });
+    }
+    fs.writeFileSync(LOCAL_CONTACTS_FILE, JSON.stringify(contacts, null, 2));
+  } catch (err) {
+    console.error('Error writing local contacts:', err);
+  }
+}
+
+const contactOperations = {
+  async create(msgData) {
+    const record = {
+      name: msgData.name,
+      email: msgData.email.toLowerCase().trim(),
+      phone: msgData.phone || null,
+      subject: msgData.subject.trim(),
+      message: msgData.message.trim(),
+      status: 'new',
+      is_read: false,
+      ip_address: msgData.ip_address || null,
+      user_agent: msgData.user_agent || null
+    };
+
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('contact_messages')
+        .insert([record])
+        .select()
+        .single();
+
+      if (!error && data) {
+        return data;
+      }
+      throw error;
+    } catch (dbErr) {
+      console.warn('Falling back to local persistent store for contact message:', dbErr.message);
+      const fallbackRecord = {
+        id: crypto.randomUUID(),
+        ...record,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      const all = getLocalContacts();
+      all.unshift(fallbackRecord);
+      saveLocalContacts(all);
+      return fallbackRecord;
+    }
+  },
+
+  async getAll(filters = {}) {
+    try {
+      let query = supabaseAdmin
+        .from('contact_messages')
+        .select('*');
+
+      if (filters.status && filters.status !== 'all') {
+        query = query.eq('status', filters.status);
+      }
+      if (filters.is_read !== undefined && filters.is_read !== '') {
+        query = query.eq('is_read', filters.is_read === true || filters.is_read === 'true');
+      }
+      if (filters.search) {
+        const term = filters.search.toLowerCase();
+        query = query.or(`name.ilike.%${term}%,email.ilike.%${term}%,subject.ilike.%${term}%,message.ilike.%${term}%`);
+      }
+
+      query = query.order('created_at', { ascending: false });
+
+      if (filters.limit) {
+        const offset = filters.offset || 0;
+        query = query.range(offset, offset + filters.limit - 1);
+      }
+
+      const { data, error } = await query;
+      if (!error && data) {
+        return data;
+      }
+      throw error;
+    } catch (dbErr) {
+      console.warn('Using local persistent store for contact_messages list:', dbErr.message);
+      let list = getLocalContacts();
+      if (filters.status && filters.status !== 'all') {
+        list = list.filter(m => m.status === filters.status);
+      }
+      if (filters.is_read !== undefined && filters.is_read !== '') {
+        const isReadBool = filters.is_read === true || filters.is_read === 'true';
+        list = list.filter(m => m.is_read === isReadBool);
+      }
+      if (filters.search) {
+        const s = filters.search.toLowerCase();
+        list = list.filter(m => 
+          (m.name || '').toLowerCase().includes(s) ||
+          (m.email || '').toLowerCase().includes(s) ||
+          (m.subject || '').toLowerCase().includes(s) ||
+          (m.message || '').toLowerCase().includes(s)
+        );
+      }
+      list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const offset = filters.offset || 0;
+      const limit = filters.limit || 10;
+      return list.slice(offset, offset + limit);
+    }
+  },
+
+  async count(filters = {}) {
+    try {
+      let query = supabaseAdmin
+        .from('contact_messages')
+        .select('*', { count: 'exact', head: true });
+
+      if (filters.status && filters.status !== 'all') {
+        query = query.eq('status', filters.status);
+      }
+      if (filters.is_read !== undefined && filters.is_read !== '') {
+        query = query.eq('is_read', filters.is_read === true || filters.is_read === 'true');
+      }
+      if (filters.search) {
+        const term = filters.search.toLowerCase();
+        query = query.or(`name.ilike.%${term}%,email.ilike.%${term}%,subject.ilike.%${term}%,message.ilike.%${term}%`);
+      }
+
+      const { count, error } = await query;
+      if (!error && typeof count === 'number') {
+        return count;
+      }
+      throw error;
+    } catch (dbErr) {
+      let list = getLocalContacts();
+      if (filters.status && filters.status !== 'all') {
+        list = list.filter(m => m.status === filters.status);
+      }
+      if (filters.is_read !== undefined && filters.is_read !== '') {
+        const isReadBool = filters.is_read === true || filters.is_read === 'true';
+        list = list.filter(m => m.is_read === isReadBool);
+      }
+      if (filters.search) {
+        const s = filters.search.toLowerCase();
+        list = list.filter(m => 
+          (m.name || '').toLowerCase().includes(s) ||
+          (m.email || '').toLowerCase().includes(s) ||
+          (m.subject || '').toLowerCase().includes(s) ||
+          (m.message || '').toLowerCase().includes(s)
+        );
+      }
+      return list.length;
+    }
+  },
+
+  async findById(id) {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('contact_messages')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (!error && data) {
+        return data;
+      }
+      throw error;
+    } catch (dbErr) {
+      const list = getLocalContacts();
+      return list.find(m => m.id === id) || null;
+    }
+  },
+
+  async updateById(id, updateData) {
+    try {
+      const payload = {
+        ...updateData,
+        updated_at: new Date().toISOString()
+      };
+      const { data, error } = await supabaseAdmin
+        .from('contact_messages')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (!error && data) {
+        return data;
+      }
+      throw error;
+    } catch (dbErr) {
+      const list = getLocalContacts();
+      const index = list.findIndex(m => m.id === id);
+      if (index !== -1) {
+        list[index] = {
+          ...list[index],
+          ...updateData,
+          updated_at: new Date().toISOString()
+        };
+        saveLocalContacts(list);
+        return list[index];
+      }
+      return null;
+    }
+  },
+
+  async deleteById(id) {
+    try {
+      const { error } = await supabaseAdmin
+        .from('contact_messages')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return true;
+    } catch (dbErr) {
+      let list = getLocalContacts();
+      list = list.filter(m => m.id !== id);
+      saveLocalContacts(list);
+      return true;
+    }
+  },
+
+  async getStatistics() {
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('contact_messages')
+        .select('status, is_read');
+
+      if (!error && data) {
+        return {
+          total: data.length,
+          new: data.filter(m => m.status === 'new').length,
+          read: data.filter(m => m.status === 'read').length,
+          replied: data.filter(m => m.status === 'replied').length,
+          archived: data.filter(m => m.status === 'archived').length,
+          unread: data.filter(m => !m.is_read).length
+        };
+      }
+      throw error;
+    } catch (dbErr) {
+      const list = getLocalContacts();
+      return {
+        total: list.length,
+        new: list.filter(m => m.status === 'new').length,
+        read: list.filter(m => m.status === 'read').length,
+        replied: list.filter(m => m.status === 'replied').length,
+        archived: list.filter(m => m.status === 'archived').length,
+        unread: list.filter(m => !m.is_read).length
+      };
+    }
+  }
+};
+
 module.exports = {
   profileOperations,
   complaintOperations,
   categoryOperations,
   evidenceOperations,
   notificationOperations,
-  auditLogOperations
+  auditLogOperations,
+  contactOperations
 };

@@ -12,14 +12,17 @@ function AdminDashboard() {
   });
   const [recentActivity, setRecentActivity] = useState([]);
   const [categoryStats, setCategoryStats] = useState([]);
+  const [contactStats, setContactStats] = useState({ total: 0, new: 0, unread: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
+    fetchContactStats();
 
     const interval = setInterval(() => {
       fetchDashboardData(false);
+      fetchContactStats();
     }, 30000);
 
     return () => clearInterval(interval);
@@ -47,6 +50,15 @@ function AdminDashboard() {
       setError(err.message || 'Failed to load dashboard data. Please try again.');
     } finally {
       if (showLoading) setLoading(false);
+    }
+  };
+
+  const fetchContactStats = async () => {
+    try {
+      const data = await api.getContactStats();
+      setContactStats(data);
+    } catch (err) {
+      console.error('Failed to fetch contact stats:', err);
     }
   };
 
@@ -93,6 +105,23 @@ function AdminDashboard() {
             <h6 className="fw-bold">Resolved</h6>
             <p className="display-6 text-success fw-bold mb-0">{stats.resolved}</p>
           </div>
+        </div>
+      </div>
+
+      <div className="row g-4 mb-4">
+        <div className="col-md-4">
+          <Link to="/manage-contacts" className="text-decoration-none">
+            <div className="feature-card p-4 h-100 position-relative">
+              <h6 className="fw-bold">Contact Messages</h6>
+              <p className="display-6 text-primary fw-bold mb-0">{contactStats.total}</p>
+              {contactStats.unread > 0 && (
+                <span className="position-absolute top-0 end-0 badge bg-danger mt-2 me-2">
+                  {contactStats.unread} unread
+                </span>
+              )}
+              <small className="text-muted">{contactStats.new} new messages</small>
+            </div>
+          </Link>
         </div>
       </div>
 
@@ -167,6 +196,7 @@ function AdminDashboard() {
           <div className="d-flex flex-wrap gap-2">
             <Link className="btn btn-outline-success" to="/manage-complaints">Manage Complaints</Link>
             <Link className="btn btn-outline-success" to="/manage-users">Manage Users</Link>
+            <Link className="btn btn-outline-success" to="/manage-contacts">Contact Messages</Link>
             <Link className="btn btn-outline-success" to="/reports">View Reports</Link>
           </div>
         </div>

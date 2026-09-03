@@ -7,6 +7,7 @@ const menuItems = [
   { to: '/manage-users', label: 'Users', icon: 'bi-people-fill' },
   { to: '/manage-officers', label: 'Officers', icon: 'bi-person-badge-fill' },
   { to: '/manage-categories', label: 'Categories', icon: 'bi-list-ul' },
+  { to: '/manage-contacts', label: 'Contact Messages', icon: 'bi-envelope-paper-fill' },
   { to: '/reports', label: 'Reports', icon: 'bi-bar-chart-line-fill' },
   { to: '/audit-logs', label: 'Audit Logs', icon: 'bi-clock-history' },
   { to: '/settings', label: 'Settings', icon: 'bi-gear-fill' },

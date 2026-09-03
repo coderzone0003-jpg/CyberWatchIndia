@@ -255,6 +255,7 @@ const complaintRoutes = require('./routes/complaints');
 const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
+const contactRoutes = require('./routes/contact');
 
 // Use routes
 app.use('/api/auth', authRoutes);
@@ -262,6 +263,7 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/contact', contactRoutes);
 
 // ============================================
 // GLOBAL ERROR HANDLER

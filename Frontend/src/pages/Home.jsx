@@ -50,8 +50,8 @@ function Home() {
               </div>
             </div>
             <div className="col-lg-5">
-              <div className="hero-card p-4 shadow-sm">
-                <h3 className="fw-bold mb-3">Immediate Response Channels</h3>
+              <div className="hero-card p-4">
+                <h2 className="fw-bold mb-3">Immediate Response Channels</h2>
                 <ul className="list-unstyled mb-0">
                   <li className="mb-2"><i className="bi bi-telephone-fill text-success me-2"></i>National Cyber Helpline: 1930</li>
                   <li className="mb-2"><i className="bi bi-shield-fill-check text-success me-2"></i>Emergency Police: 112</li>

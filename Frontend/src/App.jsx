@@ -27,6 +27,7 @@ import ManageComplaints from './pages/ManageComplaints';
 import ManageUsers from './pages/ManageUsers';
 import ManageOfficers from './pages/ManageOfficers';
 import ManageCategories from './pages/ManageCategories';
+import ManageContacts from './pages/ManageContacts';
 import Reports from './pages/Reports';
 import AuditLogs from './pages/AuditLogs';
 import Settings from './pages/Settings';
@@ -245,6 +246,7 @@ function AppContent() {
             <Route path="manage-users" element={<ManageUsers />} />
             <Route path="manage-officers" element={<ManageOfficers />} />
             <Route path="manage-categories" element={<ManageCategories />} />
+            <Route path="manage-contacts" element={<ManageContacts />} />
             <Route path="reports" element={<Reports />} />
             <Route path="audit-logs" element={<AuditLogs />} />
             <Route path="settings" element={<Settings />} />

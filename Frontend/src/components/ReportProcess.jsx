@@ -18,7 +18,7 @@ function ReportProcess() {
         </div>
         <div className="row g-4 justify-content-center">
           {steps.map((step, index) => (
-            <div className="col-md-6 col-lg-4" key={step.title}>
+            <div className="col-6 col-md-4 col-lg" key={step.title}>
               <div className="process-card p-4 h-100">
                 <div className="step-number">0{index + 1}</div>
                 <div className="process-icon mb-3">
