@@ -75,13 +75,16 @@ html {
   transition: none;
 }
 
-.hero-card:hover,
+.hero-card:hover {
+  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.15);
+}
+
 .feature-card:hover,
 .process-card:hover,
 .tip-card:hover,
 .stat-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 16px 35px rgba(237, 239, 238, 0.18);
+  box-shadow: 0 16px 35px rgba(22, 163, 74, 0.18);
 }
 
 .category-card {
@@ -235,10 +238,21 @@ main {
 .social-link {
   color: #bfdbfe;
   text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer a:hover,
+.social-link:hover {
+  color: #fff;
 }
 
 .social-link {
   font-size: 1.1rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary-green);
+  outline-offset: 2px;
 }
 
 @keyframes spin {

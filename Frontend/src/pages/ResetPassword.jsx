@@ -167,8 +167,9 @@ function ResetPassword() {
           {!success && (
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
-                <label className="form-label">New Password</label>
+                <label className="form-label" htmlFor="reset-password">New Password <span className="text-danger">*</span></label>
                 <input 
+                  id="reset-password"
                   type="password" 
                   className="form-control" 
                   placeholder="Enter new password"
@@ -179,10 +180,11 @@ function ResetPassword() {
                 />
               </div>
               <div className="mb-3">
-                <label className="form-label">Confirm New Password</label>
+                <label className="form-label" htmlFor="reset-confirm-password">Confirm New Password <span className="text-danger">*</span></label>
                 <input 
                   type="password" 
                   className="form-control" 
+                  id="reset-confirm-password"
                   placeholder="Confirm new password"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}

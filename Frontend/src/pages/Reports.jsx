@@ -375,13 +375,6 @@ function Reports() {
                     <p className="text-muted mb-0">Registered users</p>
                   </div>
                 </div>
-                <div className="col-md-4">
-                  <div className="feature-card p-4 h-100">
-                    <h5 className="fw-bold">Avg Resolution Time</h5>
-                    <p className="display-6 text-primary fw-bold mb-0">{stats.avg_resolution_days || 0}</p>
-                    <p className="text-muted mb-0">Days to resolve</p>
-                  </div>
-                </div>
               </div>
 
               <div className="row g-4">
@@ -399,7 +392,7 @@ function Reports() {
                 <div className="col-md-6">
                   <div className="feature-card p-4 h-100">
                     <h5 className="fw-bold mb-3">Avg. Resolution Time</h5>
-                    <p className="display-6 text-info fw-bold mb-0">
+                    <p className="display-6 text-success fw-bold mb-0">
                       {stats.avg_resolution_days || 0} <span className="fs-4">days</span>
                     </p>
                     <p className="text-muted mb-0">Average time to resolve</p>

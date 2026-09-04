@@ -344,11 +344,11 @@ function ManageContacts() {
 
       {/* View Message Modal */}
       {viewModal && selectedMsg && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setViewModal(false)}>
+        <div className="modal show d-block" tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="msg-modal-title" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }} onClick={() => setViewModal(false)}>
           <div className="modal-dialog modal-lg modal-dialog-centered" onClick={e => e.stopPropagation()}>
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title fw-bold">
+                <h5 className="modal-title fw-bold" id="msg-modal-title">
                   <i className="bi bi-envelope me-2 text-success"></i>
                   {selectedMsg.subject}
                 </h5>

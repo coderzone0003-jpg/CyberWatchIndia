@@ -6,7 +6,7 @@ function Helpline() {
       <div className="container py-2">
         <div className="row align-items-center g-4">
           <div className="col-lg-7">
-            <span className="section-label text-white-50">Emergency Support</span>
+            <span className="section-label" style={{ color: '#14532d' }}>Emergency Support</span>
             <h2 className="fw-bold mt-3">Need immediate help? Reach out now</h2>
             <p className="mb-0">Use the national cyber helpline or emergency services for urgent cases.</p>
           </div>

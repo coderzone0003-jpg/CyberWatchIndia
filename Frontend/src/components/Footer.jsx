@@ -14,21 +14,24 @@ function Footer({ authUser }) {
             <h3 className="fw-bold mb-2">Quick Links</h3>
             <ul className="list-unstyled text-muted mb-0 small">
               <li><Link to="/" className="text-decoration-none">Home</Link></li>
+              <li><Link to="/about" className="text-decoration-none">About</Link></li>
               {authUser && <li><Link to="/report" className="text-decoration-none">Report Crime</Link></li>}
               <li><Link to="/safety" className="text-decoration-none">Safety Tips</Link></li>
+              <li><Link to="/faq" className="text-decoration-none">FAQ</Link></li>
+              <li><Link to="/contact" className="text-decoration-none">Contact</Link></li>
             </ul>
           </div>
           <div className="col-md-4">
             <h3 className="fw-bold mb-2">Follow Us</h3>
             <div className="d-flex gap-3 mb-2">
               <a href="https://www.facebook.com" className="social-link"><i className="bi bi-facebook"></i></a>
-              <a href="https://www.twitter.com" className="social-link"><i className="bi bi-twitter-x"></i></a>
+              <a href="https://x.com" className="social-link"><i className="bi bi-twitter-x"></i></a>
               <a href="https://www.instagram.com" className="social-link"><i className="bi bi-instagram"></i></a>
             </div>
-            <p className="mb-0 small">
-              <Link to="/contact" className="text-decoration-none me-3">Privacy Policy</Link>
-              <Link to="/contact" className="text-decoration-none">Terms & Conditions</Link>
-            </p>
+              <p className="mb-0 small">
+                <span className="text-white-50 me-3">Privacy Policy</span>
+                <span className="text-white-50">Terms & Conditions</span>
+              </p>
           </div>
         </div>
         <div className="row mt-3 pt-2 border-top border-secondary">

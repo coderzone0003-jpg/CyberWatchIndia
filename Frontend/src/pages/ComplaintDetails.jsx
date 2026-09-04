@@ -221,13 +221,15 @@ function ComplaintDetails() {
             )}
           </div>
 
-          <div className="alert alert-info mb-0">
-            <small>
-              <i className="bi bi-info-circle me-2"></i>
-              {complaint.status === 'pending' && 'You can delete evidence files while the complaint is pending.'}
-              {complaint.status !== 'pending' && 'Evidence files cannot be deleted once the complaint is under investigation.'}
-            </small>
-          </div>
+          {evidence.length > 0 && (
+            <div className="alert alert-info mb-0">
+              <small>
+                <i className="bi bi-info-circle me-2"></i>
+                {complaint.status === 'pending' && 'You can delete evidence files while the complaint is pending.'}
+                {complaint.status !== 'pending' && 'Evidence files cannot be deleted once the complaint is under investigation.'}
+              </small>
+            </div>
+          )}
         </div>
       </div>
     </section>

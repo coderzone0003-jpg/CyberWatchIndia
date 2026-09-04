@@ -46,10 +46,10 @@ function Notifications({ authUser }) {
     try {
       await api.markAsRead(id);
       // Update local state
-      setNotifications(notifications.map(n => 
+      setNotifications(prev => prev.map(n => 
         n.id === id ? { ...n, is_read: true } : n
       ));
-      setUnreadCount(Math.max(0, unreadCount - 1));
+      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err) {
       console.error('Failed to mark as read:', err);
     }
@@ -58,7 +58,7 @@ function Notifications({ authUser }) {
   const handleMarkAllAsRead = async () => {
     try {
       await api.markAllAsRead();
-      setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
     } catch (err) {
       console.error('Failed to mark all as read:', err);

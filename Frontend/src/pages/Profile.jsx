@@ -77,7 +77,7 @@ function Profile() {
   };
 
   const validateNewPassword = (pwd) => {
-    if (pwd.length < 8) return 'Password must be at least 8 characters long.';
+    if (pwd.length < 12) return 'Password must be at least 12 characters long.';
     if (!/[A-Z]/.test(pwd)) return 'Password must contain at least one uppercase letter.';
     if (!/\d/.test(pwd)) return 'Password must contain at least one number.';
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) return 'Password must contain at least one special character.';
@@ -196,8 +196,9 @@ function Profile() {
               <form onSubmit={handleUpdateProfile}>
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label">Name</label>
+                    <label className="form-label" htmlFor="profile-name">Name <span className="text-danger">*</span></label>
                     <input
+                      id="profile-name"
                       type="text"
                       className="form-control"
                       name="full_name"
@@ -207,8 +208,9 @@ function Profile() {
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Email (Read-only)</label>
+                    <label className="form-label" htmlFor="profile-email">Email (Read-only)</label>
                     <input
+                      id="profile-email"
                       type="email"
                       className="form-control bg-light"
                       name="email"
@@ -218,8 +220,9 @@ function Profile() {
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Mobile</label>
+                    <label className="form-label" htmlFor="profile-phone">Mobile <span className="text-danger">*</span></label>
                     <input
+                      id="profile-phone"
                       type="tel"
                       inputMode="numeric"
                       pattern="[0-9]*"
@@ -232,8 +235,9 @@ function Profile() {
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Address</label>
+                    <label className="form-label" htmlFor="profile-address">Address</label>
                     <input
+                      id="profile-address"
                       type="text"
                       className="form-control"
                       name="address"
@@ -267,8 +271,9 @@ function Profile() {
 
               <form onSubmit={handleUpdatePassword}>
                 <div className="mb-3">
-                  <label className="form-label">Current Password</label>
+                  <label className="form-label" htmlFor="current-password">Current Password <span className="text-danger">*</span></label>
                   <input
+                    id="current-password"
                     type="password"
                     className="form-control"
                     name="currentPassword"
@@ -278,20 +283,22 @@ function Profile() {
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">New Password</label>
+                  <label className="form-label" htmlFor="new-password">New Password <span className="text-danger">*</span></label>
                   <input
+                    id="new-password"
                     type="password"
                     className="form-control"
                     name="newPassword"
                     value={passwordData.newPassword}
                     onChange={handlePasswordChange}
-                    placeholder="Min 8 chars, 1 uppercase, 1 num, 1 special"
+                    placeholder="Min 12 chars, 1 uppercase, 1 num, 1 special"
                     required
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Confirm New Password</label>
+                  <label className="form-label" htmlFor="confirm-new-password">Confirm New Password <span className="text-danger">*</span></label>
                   <input
+                    id="confirm-new-password"
                     type="password"
                     className="form-control"
                     name="confirmPassword"

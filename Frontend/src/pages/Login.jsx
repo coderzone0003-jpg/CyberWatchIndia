@@ -37,10 +37,6 @@ function LoginPage({ onUserLogin, onAdminLogin }) {
     return emailRegex.test(email);
   };
 
-  const validatePassword = (password) => {
-    return password.length >= 6;
-  };
-
   const validateForm = () => {
     const errors = {};
     let isValid = true;
@@ -55,9 +51,6 @@ function LoginPage({ onUserLogin, onAdminLogin }) {
 
     if (!form.password) {
       errors.password = 'Password is required';
-      isValid = false;
-    } else if (!validatePassword(form.password)) {
-      errors.password = 'Password must be at least 6 characters';
       isValid = false;
     }
 
@@ -135,8 +128,9 @@ function LoginPage({ onUserLogin, onAdminLogin }) {
           )}
 
           <div className="mb-3">
-            <label className="form-label">Email</label>
+            <label className="form-label" htmlFor="login-email">Email <span className="text-danger">*</span></label>
             <input
+              id="login-email"
               type="email"
               className={`form-control ${fieldErrors.email ? 'is-invalid' : ''}`}
               placeholder="you@example.com"
@@ -151,9 +145,10 @@ function LoginPage({ onUserLogin, onAdminLogin }) {
             {fieldErrors.email && <div className="invalid-feedback">{fieldErrors.email}</div>}
           </div>
           <div className="mb-3">
-            <label className="form-label">Password</label>
+            <label className="form-label" htmlFor="login-password">Password <span className="text-danger">*</span></label>
             <div className="input-group">
               <input
+                id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 className={`form-control ${fieldErrors.password ? 'is-invalid' : ''}`}
                 placeholder="Password"
@@ -179,7 +174,7 @@ function LoginPage({ onUserLogin, onAdminLogin }) {
             </div>
           </div>
           <div className="mb-3">
-            <Link to="/forgot-password" className="text-decoration-none small">
+            <Link to="/forgot-password" className="text-decoration-none small text-success">
               Forgot password?
             </Link>
           </div>

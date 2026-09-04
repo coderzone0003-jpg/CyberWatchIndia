@@ -183,11 +183,11 @@ function ManageOfficers() {
 
         {/* Add Officer Modal */}
         {showAddModal && (
-          <div className="modal show" style={{ display: 'block' }}>
-            <div className="modal-dialog">
+          <div className="modal show d-block" tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="add-officer-title" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setShowAddModal(false)}>
+            <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Add New Officer</h5>
+                  <h5 className="modal-title" id="add-officer-title">Add New Officer</h5>
                   <button 
                     type="button" 
                     className="btn-close"
@@ -195,10 +195,11 @@ function ManageOfficers() {
                   ></button>
                 </div>
                 <div className="modal-body">
-                  <form onSubmit={handleAddOfficer}>
+                  <form id="add-officer-form" onSubmit={handleAddOfficer}>
                     <div className="mb-3">
-                      <label className="form-label">Name *</label>
+                      <label className="form-label" htmlFor="officer-name">Name *</label>
                       <input 
+                        id="officer-name"
                         type="text" 
                         className="form-control"
                         name="name"
@@ -208,8 +209,9 @@ function ManageOfficers() {
                       />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Email *</label>
+                      <label className="form-label" htmlFor="officer-email">Email *</label>
                       <input 
+                        id="officer-email"
                         type="email" 
                         className="form-control"
                         name="email"
@@ -219,8 +221,9 @@ function ManageOfficers() {
                       />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Specialization</label>
+                      <label className="form-label" htmlFor="officer-spec">Specialization</label>
                       <input 
+                        id="officer-spec"
                         type="text" 
                         className="form-control"
                         name="specialization"
@@ -230,8 +233,9 @@ function ManageOfficers() {
                       />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Badge Number</label>
+                      <label className="form-label" htmlFor="officer-badge">Badge Number</label>
                       <input 
+                        id="officer-badge"
                         type="text" 
                         className="form-control"
                         name="badge_number"
@@ -241,8 +245,9 @@ function ManageOfficers() {
                       />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Temporary Password *</label>
+                      <label className="form-label" htmlFor="officer-password">Temporary Password *</label>
                       <input 
+                        id="officer-password"
                         type="password" 
                         className="form-control"
                         name="password"
@@ -252,19 +257,19 @@ function ManageOfficers() {
                         placeholder="Officer will change this on first login"
                       />
                     </div>
-                    <div className="modal-footer">
-                      <button 
-                        type="button" 
-                        className="btn btn-secondary"
-                        onClick={() => setShowAddModal(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button type="submit" className="btn btn-success">
-                        Add Officer
-                      </button>
-                    </div>
                   </form>
+                </div>
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => setShowAddModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-success" form="add-officer-form">
+                    Add Officer
+                  </button>
                 </div>
               </div>
             </div>

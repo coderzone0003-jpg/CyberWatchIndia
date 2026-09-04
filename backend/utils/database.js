@@ -509,6 +509,7 @@ const evidenceOperations = {
 
   /**
    * Get evidence from DB; if empty/missing table, fall back to Supabase storage bucket.
+   * Searches complaint-scoped path first, then legacy user-root path for backward compat.
    */
   async getForComplaint(complaint) {
     const { listFilesForUser } = require('./fileUpload');
@@ -529,7 +530,26 @@ const evidenceOperations = {
       return { files: dbFiles, source: 'database', tableMissing: false };
     }
 
-    const storageFiles = await listFilesForUser(complaint.user_id, complaint.id);
+    let storageFiles = await listFilesForUser(complaint.user_id, complaint.id);
+    let source = storageFiles.length > 0 ? 'storage' : 'none';
+
+    if (storageFiles.length === 0 && complaint.user_id) {
+      const legacyFiles = await listFilesForUser(complaint.user_id, null);
+      if (legacyFiles.length > 0) {
+        const cTime = complaint.created_at ? new Date(complaint.created_at).getTime() : null;
+        const filtered = legacyFiles.filter((file) => {
+          if (cTime == null) return true;
+          const ts = file.created_at ? new Date(file.created_at).getTime() : null;
+          if (ts == null) return true;
+          // File should be within ~15 min after the complaint was created.
+          const delta = ts - cTime;
+          return delta >= -60 * 1000 && delta < 15 * 60 * 1000;
+        });
+        storageFiles = filtered;
+        source = storageFiles.length > 0 ? 'storage:legacy' : 'none';
+      }
+    }
+
     const files = storageFiles.map((file) => ({
       id: file.file_path,
       complaint_id: complaint.id,
@@ -542,31 +562,40 @@ const evidenceOperations = {
 
     return {
       files,
-      source: storageFiles.length > 0 ? 'storage' : 'none',
+      source,
       tableMissing,
     };
   },
 
   async deleteById(id) {
-    // First get the file path to delete from storage
-    const { data: file } = await supabaseAdmin
-      .from('evidence_files')
-      .select('file_path')
-      .eq('id', id)
-      .single();
-    
-    if (file && file.file_path) {
-      const { deleteFile } = require('./fileUpload');
-      await deleteFile(file.file_path);
+    const { deleteFile } = require('./fileUpload');
+    // If id looks like a storage path (contains '/'), delete directly from storage
+    const isStoragePath = typeof id === 'string' && id.includes('/');
+    if (isStoragePath) {
+      await deleteFile(id);
+      // Best-effort DB cleanup (ignore if table missing)
+      try {
+        await supabaseAdmin.from('evidence_files').delete().eq('file_path', id);
+      } catch (_) {}
+      return true;
     }
-    
-    // Delete from database
-    const { error } = await supabaseAdmin
-      .from('evidence_files')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    // Otherwise look up file_path from DB then delete
+    try {
+      const { data: file } = await supabaseAdmin
+        .from('evidence_files')
+        .select('file_path')
+        .eq('id', id)
+        .single();
+      if (file && file.file_path) {
+        await deleteFile(file.file_path);
+      }
+    } catch (_) {}
+    try {
+      const { error } = await supabaseAdmin.from('evidence_files').delete().eq('id', id);
+      if (error) throw error;
+    } catch (err) {
+      if (err.code !== 'PGRST205') throw err;
+    }
     return true;
   }
 };

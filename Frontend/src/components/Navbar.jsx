@@ -61,7 +61,13 @@ function Navbar({ authUser, isAdmin, onLogout }) {
           <div className="container">
             <div className="gov-topbar-inner">
               <div className="d-flex align-items-center gap-2">
-                <i className="bi bi-shield-shaded text-success"></i>
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg"
+                  alt="National Emblem of India"
+                  width="22"
+                  height="22"
+                  style={{ filter: 'brightness(0) invert(1)', objectFit: 'contain' }}
+                />
                 <span className="fw-semibold gov-topbar-title">Government of India</span>
               </div>
               <div className="d-flex align-items-center gap-2 gap-md-3 gov-topbar-meta">
@@ -273,11 +279,11 @@ function Navbar({ authUser, isAdmin, onLogout }) {
 
       {/* Authors / Developers Modal */}
       {showAuthorsModal && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered">
+        <div className="modal fade show d-block" tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="authors-modal-title" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }} onClick={() => setShowAuthorsModal(false)}>
+          <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
             <div className="modal-content border-0 rounded-4 shadow">
               <div className="modal-header bg-success text-white rounded-top-4">
-                <h5 className="modal-title fw-bold">
+                <h5 className="modal-title fw-bold" id="authors-modal-title">
                   <i className="bi bi-shield-lock-fill me-2"></i>SHIELD.AI - Developers Team
                 </h5>
                 <button 

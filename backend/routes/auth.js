@@ -176,7 +176,12 @@ router.post('/reset-password', async (req, res) => {
       return res.status(400).json({ message: 'New password is required' });
     }
 
-    // Update password using Supabase
+    const { validatePassword } = require('../utils/validation');
+    const passwordCheck = validatePassword(newPassword);
+    if (!passwordCheck.valid) {
+      return res.status(400).json({ message: 'Password does not meet requirements', errors: passwordCheck.errors });
+    }
+
     const { data, error } = await supabaseAdmin.auth.updateUser({
       password: newPassword
     });

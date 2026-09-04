@@ -193,7 +193,8 @@ function RegisterPage({ onRegister }) {
             <div className="alert alert-info mb-3" role="alert">
               <small>
                 <strong>Password Requirements:</strong><br/>
-                <div className="mt-2">
+              </small>
+              <div className="mt-2">
                   {getPasswordRequirementStatus(
                     `Minimum ${passwordRequirements.minLength} characters`,
                     p => p.length >= passwordRequirements.minLength
@@ -247,14 +248,14 @@ function RegisterPage({ onRegister }) {
                     )
                   )}
                 </div>
-              </small>
             </div>
           )}
 
           <div className="row g-3">
             <div className="col-md-6">
-              <label className="form-label">Name *</label>
+              <label className="form-label" htmlFor="register-name">Name *</label>
               <input 
+                id="register-name"
                 className="form-control" 
                 placeholder="Full name" 
                 value={form.name} 
@@ -264,8 +265,9 @@ function RegisterPage({ onRegister }) {
               />
             </div>
             <div className="col-md-6">
-              <label className="form-label">Email *</label>
+              <label className="form-label" htmlFor="register-email">Email *</label>
               <input 
+                id="register-email"
                 type="email" 
                 className="form-control" 
                 placeholder="Email" 
@@ -276,8 +278,9 @@ function RegisterPage({ onRegister }) {
               />
             </div>
             <div className="col-12">
-              <label className="form-label">Mobile Number *</label>
+              <label className="form-label" htmlFor="register-mobile">Mobile Number *</label>
               <input
+                id="register-mobile"
                 type="tel"
                 inputMode="numeric"
                 className={`form-control ${fieldErrors.mobile ? 'is-invalid' : ''}`}
@@ -298,8 +301,9 @@ function RegisterPage({ onRegister }) {
               <small className="text-muted">Enter a valid 10-digit Indian mobile number (starts with 6–9)</small>
             </div>
             <div className="col-md-6">
-              <label className="form-label">Password *</label>
+              <label className="form-label" htmlFor="register-password">Password *</label>
               <input 
+                id="register-password"
                 type="password" 
                 className="form-control" 
                 placeholder="Password" 
@@ -310,8 +314,9 @@ function RegisterPage({ onRegister }) {
               />
             </div>
             <div className="col-md-6">
-              <label className="form-label">Confirm Password *</label>
+              <label className="form-label" htmlFor="register-confirm-password">Confirm Password *</label>
               <input 
+                id="register-confirm-password"
                 type="password" 
                 className="form-control" 
                 placeholder="Confirm" 

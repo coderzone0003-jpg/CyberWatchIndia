@@ -78,6 +78,7 @@ function MyComplaints() {
 
   const clearFilters = () => {
     setFilters({
+      search: '',
       status: '',
       category_id: '',
       date_from: '',

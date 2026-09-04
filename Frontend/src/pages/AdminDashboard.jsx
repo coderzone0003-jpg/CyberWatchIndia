@@ -97,7 +97,7 @@ function AdminDashboard() {
         <div className="col-md-3">
           <div className="feature-card p-4 h-100">
             <h6 className="fw-bold">Pending</h6>
-            <p className="display-6 text-warning fw-bold mb-0">{stats.pending}</p>
+            <p className="display-6 fw-bold mb-0" style={{ color: '#b45309' }}>{stats.pending}</p>
           </div>
         </div>
         <div className="col-md-3">

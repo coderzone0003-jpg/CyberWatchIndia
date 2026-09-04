@@ -221,8 +221,11 @@ const api = {
   getCurrentUser: (authScope, tokenOverride) =>
     apiRequest('/api/auth/me', { authScope, tokenOverride }),
 
-  getPasswordRequirements: () => 
-    fetch(`${API_URL}/api/auth/password-requirements`).then(res => res.json()),
+  getPasswordRequirements: () =>
+    fetch(`${API_URL}/api/auth/password-requirements`).then(res => {
+      if (!res.ok) throw new Error('Failed to fetch password requirements');
+      return res.json();
+    }),
 
   forgotPassword: (email) =>
     apiRequest('/api/auth/forgot-password', {
@@ -251,11 +254,17 @@ const api = {
   getComplaints: (filters = {}) =>
     apiRequest(`/api/complaints${buildQueryString(filters)}`),
 
-  getComplaintCategories: () => 
-    fetch(`${API_URL}/api/complaints/categories`).then(res => res.json()),
+  getComplaintCategories: () =>
+    fetch(`${API_URL}/api/complaints/categories`).then(res => {
+      if (!res.ok) throw new Error('Failed to fetch categories');
+      return res.json();
+    }),
 
   getComplaintStatistics: () =>
-    fetch(`${API_URL}/api/complaints/statistics`).then(res => res.json()),
+    fetch(`${API_URL}/api/complaints/statistics`).then(res => {
+      if (!res.ok) throw new Error('Failed to fetch statistics');
+      return res.json();
+    }),
 
   getMyComplaints: (filters = {}) =>
     apiRequest(`/api/complaints/my${buildQueryString(filters)}`),
@@ -266,8 +275,11 @@ const api = {
   getComplaintById: (id) => 
     apiRequest(`/api/complaints/${id}`),
 
-  getComplaintByNumber: (number) => 
-    fetch(`${API_URL}/api/complaints/number/${number}`).then(res => res.json()),
+  getComplaintByNumber: (number) =>
+    fetch(`${API_URL}/api/complaints/number/${number}`).then(res => {
+      if (!res.ok) throw new Error('Complaint not found');
+      return res.json();
+    }),
 
   getComplaintEvidence: (id) =>
     apiRequest(`/api/complaints/${id}/evidence`),

@@ -110,15 +110,16 @@ function TrackComplaint() {
             )}
 
             <div className="contact-form p-4 rounded-4 shadow-sm">
-              <label className="form-label">Complaint ID</label>
+              <label className="form-label" htmlFor="complaint-search">Complaint ID <span className="text-danger">*</span></label>
               <div className="input-group mb-3">
                 <input 
+                  id="complaint-search"
                   className="form-control" 
                   placeholder="Enter ID (e.g., CYB-2024-00001)" 
                   value={complaintId}
                   onChange={(e) => setComplaintId(e.target.value)}
                   disabled={loading}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
                 />
                 {complaintId && (
                   <button 

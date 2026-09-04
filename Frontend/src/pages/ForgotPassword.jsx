@@ -50,8 +50,9 @@ function ForgotPassword() {
 
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label className="form-label">Email Address</label>
+              <label className="form-label" htmlFor="forgot-email">Email Address <span className="text-danger">*</span></label>
               <input 
+                id="forgot-email"
                 type="email" 
                 className="form-control" 
                 placeholder="you@example.com" 

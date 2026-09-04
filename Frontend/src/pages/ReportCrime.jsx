@@ -497,8 +497,8 @@ function ReportCrime() {
     <section className="section py-5">
       {/* Location Permission Modal */}
       {showLocationModal && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1060 }}>
-          <div className="modal-dialog modal-dialog-centered">
+        <div className="modal fade show d-block" tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="location-modal-title" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1060 }} onClick={() => setShowLocationModal(false)}>
+          <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
             <div className="modal-content border-0 rounded-4 shadow-lg p-4">
               <div className="modal-header border-0 pb-0 justify-content-center">
                 <div className="bg-success-subtle text-success rounded-circle p-3 mb-2">
@@ -506,7 +506,7 @@ function ReportCrime() {
                 </div>
               </div>
               <div className="modal-body text-center pt-0">
-                <h4 className="fw-bold mb-3">Location Permission Required</h4>
+                <h4 className="fw-bold mb-3" id="location-modal-title">Location Permission Required</h4>
                 <p className="text-muted mb-4">
                   SHIELD.AI requires access to your current location to automatically tag the incident site for rapid response and emergency dispatch.
                 </p>
@@ -609,7 +609,7 @@ function ReportCrime() {
           </div>
 
           <div className="col-lg-8">
-            <form className="contact-form p-4 rounded-4 shadow-sm" onSubmit={handleSubmit}>
+            <form className="contact-form p-4 rounded-4 shadow-sm" onSubmit={(e) => { e.preventDefault(); if (step === 4) handleSubmit(e); else handleNext(); }}>
               {step === 1 && (
                 <div className="row g-3">
                   <div className="col-12">
@@ -619,8 +619,9 @@ function ReportCrime() {
                     </p>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Full Name <span className="text-danger">*</span></label>
+                    <label className="form-label" htmlFor="report-name">Full Name <span className="text-danger">*</span></label>
                     <input
+                      id="report-name"
                       className={`form-control ${renderFieldErrorClass('name')}`}
                       placeholder="e.g. Aarav Sharma"
                       value={formData.name}
@@ -634,8 +635,9 @@ function ReportCrime() {
                     <small className="text-muted">2–255 letters, spaces, hyphens, apostrophes</small>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Email <span className="text-danger">*</span></label>
+                    <label className="form-label" htmlFor="report-email">Email <span className="text-danger">*</span></label>
                     <input
+                      id="report-email"
                       type="email"
                       className={`form-control ${renderFieldErrorClass('email')}`}
                       placeholder="citizen@email.com"
@@ -650,8 +652,9 @@ function ReportCrime() {
                     <small className="text-muted">Case updates &amp; acknowledgement will be sent here</small>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Mobile Number <span className="text-danger">*</span></label>
+                    <label className="form-label" htmlFor="report-mobile">Mobile Number <span className="text-danger">*</span></label>
                     <input
+                      id="report-mobile"
                       type="tel"
                       inputMode="numeric"
                       className={`form-control ${renderFieldErrorClass('mobile')}`}
@@ -668,8 +671,9 @@ function ReportCrime() {
                     <small className="text-muted">10-digit Indian mobile number (starts with 6–9)</small>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Residential Address</label>
+                    <label className="form-label" htmlFor="report-address">Residential Address</label>
                     <input
+                      id="report-address"
                       className={`form-control ${renderFieldErrorClass('address')}`}
                       placeholder="Street, City, State"
                       value={formData.address}
@@ -692,8 +696,9 @@ function ReportCrime() {
                     </p>
                   </div>
                   <div className="col-12">
-                    <label className="form-label">Complaint Title <span className="text-danger">*</span></label>
+                    <label className="form-label" htmlFor="report-title">Complaint Title <span className="text-danger">*</span></label>
                     <input
+                      id="report-title"
                       className={`form-control ${renderFieldErrorClass('title')}`}
                       placeholder="Short summary, e.g. Fraudulent UPI transaction of ₹50,000 on DD/MM/YYYY"
                       value={formData.title}
@@ -706,8 +711,9 @@ function ReportCrime() {
                     <small className="text-muted">{formData.title.trim().length} / 10–255 characters</small>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Crime Category <span className="text-danger">*</span></label>
+                    <label className="form-label" htmlFor="report-category">Crime Category <span className="text-danger">*</span></label>
                     <select
+                      id="report-category"
                       className={`form-select ${renderFieldErrorClass('category_id')}`}
                       value={formData.category_id}
                       onChange={handleInputChange}
@@ -723,8 +729,9 @@ function ReportCrime() {
                     {fieldErrors.category_id && <div className="invalid-feedback">{fieldErrors.category_id}</div>}
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Severity</label>
+                    <label className="form-label" htmlFor="report-severity">Severity</label>
                     <select
+                      id="report-severity"
                       className={`form-select ${renderFieldErrorClass('severity')}`}
                       value={formData.severity}
                       onChange={handleInputChange}
@@ -739,8 +746,9 @@ function ReportCrime() {
                     {fieldErrors.severity && <div className="invalid-feedback">{fieldErrors.severity}</div>}
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Incident Date</label>
+                    <label className="form-label" htmlFor="report-incident-date">Incident Date</label>
                     <input
+                      id="report-incident-date"
                       type="date"
                       className={`form-control ${renderFieldErrorClass('incident_date')}`}
                       value={formData.incident_date}
@@ -754,7 +762,7 @@ function ReportCrime() {
                   </div>
                   <div className="col-md-6">
                     <div className="d-flex justify-content-between align-items-center mb-1">
-                      <label className="form-label mb-0">Location (City / State)</label>
+                      <label className="form-label mb-0" htmlFor="report-location">Location (City / State)</label>
                       <button 
                         type="button" 
                         className="btn btn-sm btn-outline-success py-0 px-2"
@@ -765,6 +773,7 @@ function ReportCrime() {
                       </button>
                     </div>
                     <input
+                      id="report-location"
                       className={`form-control ${renderFieldErrorClass('location')}`}
                       placeholder="e.g. Mumbai, Maharashtra"
                       value={formData.location}
@@ -777,8 +786,9 @@ function ReportCrime() {
                     <small className="text-muted">Used for jurisdictional routing</small>
                   </div>
                   <div className="col-12">
-                    <label className="form-label">Detailed Description <span className="text-danger">*</span></label>
+                    <label className="form-label" htmlFor="report-description">Detailed Description <span className="text-danger">*</span></label>
                     <textarea
+                      id="report-description"
                       className={`form-control ${renderFieldErrorClass('description')}`}
                       rows="5"
                       placeholder="Describe what happened, when, how, parties involved, any witnesses, financial loss, and other relevant context."
@@ -803,8 +813,9 @@ function ReportCrime() {
                     </p>
                   </div>
                   <div className="col-12">
-                    <label className="form-label">Upload Evidence (max 5 files &middot; 10 MB each)</label>
+                    <label className="form-label" htmlFor="report-evidence">Upload Evidence (max 5 files &middot; 10 MB each)</label>
                     <input
+                      id="report-evidence"
                       type="file"
                       className={`form-control ${renderFieldErrorClass('evidence')}`}
                       multiple
@@ -941,21 +952,6 @@ function ReportCrime() {
                     <strong>Important:</strong> Clicking <em>Submit Complaint</em> registers your report officially. You will receive a secure, trackable Complaint ID. Misrepresentation or false reporting is a punishable offence under applicable cyber laws.
                   </div>
 
-                  <button
-                    className="btn btn-success px-4"
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Submitting Securely...
-                      </>
-                    ) : (
-                      <><i className="bi bi-send-check me-2"></i>Submit Complaint</>
-                    )}
-                  </button>
                 </div>
               )}
 

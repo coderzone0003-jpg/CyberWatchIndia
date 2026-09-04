@@ -178,11 +178,11 @@ function ManageCategories() {
 
         {/* Add Category Modal */}
         {showAddModal && (
-          <div className="modal show" style={{ display: 'block' }}>
-            <div className="modal-dialog">
+          <div className="modal show d-block" tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="add-category-title" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setShowAddModal(false)}>
+            <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Add New Category</h5>
+                  <h5 className="modal-title" id="add-category-title">Add New Category</h5>
                   <button 
                     type="button" 
                     className="btn-close"
@@ -190,10 +190,11 @@ function ManageCategories() {
                   ></button>
                 </div>
                 <div className="modal-body">
-                  <form onSubmit={handleAddCategory}>
+                  <form id="add-category-form" onSubmit={handleAddCategory}>
                     <div className="mb-3">
-                      <label className="form-label">Category Name *</label>
+                      <label className="form-label" htmlFor="cat-name-add">Category Name *</label>
                       <input 
+                        id="cat-name-add"
                         type="text" 
                         className="form-control"
                         name="name"
@@ -204,8 +205,9 @@ function ManageCategories() {
                       />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Description</label>
+                      <label className="form-label" htmlFor="cat-desc-add">Description</label>
                       <textarea 
+                        id="cat-desc-add"
                         className="form-control"
                         name="description"
                         value={newCategory.description}
@@ -214,19 +216,19 @@ function ManageCategories() {
                         placeholder="Brief description of this crime category"
                       />
                     </div>
-                    <div className="modal-footer">
-                      <button 
-                        type="button" 
-                        className="btn btn-secondary"
-                        onClick={() => setShowAddModal(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button type="submit" className="btn btn-success">
-                        Add Category
-                      </button>
-                    </div>
                   </form>
+                </div>
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => setShowAddModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-success" form="add-category-form">
+                    Add Category
+                  </button>
                 </div>
               </div>
             </div>
@@ -235,11 +237,11 @@ function ManageCategories() {
 
         {/* Edit Category Modal */}
         {showEditModal && (
-          <div className="modal show" style={{ display: 'block' }}>
-            <div className="modal-dialog">
+          <div className="modal show d-block" tabIndex="-1" role="dialog" aria-modal="true" aria-labelledby="edit-category-title" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setShowEditModal(false)}>
+            <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Edit Category</h5>
+                  <h5 className="modal-title" id="edit-category-title">Edit Category</h5>
                   <button 
                     type="button" 
                     className="btn-close"
@@ -247,10 +249,11 @@ function ManageCategories() {
                   ></button>
                 </div>
                 <div className="modal-body">
-                  <form onSubmit={handleEditCategory}>
+                  <form id="edit-category-form" onSubmit={handleEditCategory}>
                     <div className="mb-3">
-                      <label className="form-label">Category Name *</label>
+                      <label className="form-label" htmlFor="cat-name-edit">Category Name *</label>
                       <input 
+                        id="cat-name-edit"
                         type="text" 
                         className="form-control"
                         name="name"
@@ -260,8 +263,9 @@ function ManageCategories() {
                       />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Description</label>
+                      <label className="form-label" htmlFor="cat-desc-edit">Description</label>
                       <textarea 
+                        id="cat-desc-edit"
                         className="form-control"
                         name="description"
                         value={newCategory.description}
@@ -269,19 +273,19 @@ function ManageCategories() {
                         rows="3"
                       />
                     </div>
-                    <div className="modal-footer">
-                      <button 
-                        type="button" 
-                        className="btn btn-secondary"
-                        onClick={() => setShowEditModal(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button type="submit" className="btn btn-success">
-                        Update Category
-                      </button>
-                    </div>
                   </form>
+                </div>
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => setShowEditModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-success" form="edit-category-form">
+                    Update Category
+                  </button>
                 </div>
               </div>
             </div>

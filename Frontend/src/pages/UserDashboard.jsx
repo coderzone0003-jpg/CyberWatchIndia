@@ -107,13 +107,13 @@ function UserDashboard() {
               <div className="col-6 col-md-3">
                 <div className="feature-card p-4 h-100">
                   <h3 className="fw-bold fs-6">Pending Cases</h3>
-                  <p className="display-6 text-warning fw-bold mb-0">{stats.pending}</p>
+                  <p className="display-6 fw-bold mb-0" style={{ color: '#b45309' }}>{stats.pending}</p>
                 </div>
               </div>
               <div className="col-6 col-md-3">
                 <div className="feature-card p-4 h-100">
                   <h3 className="fw-bold fs-6">Under Investigation</h3>
-                  <p className="display-6 text-warning fw-bold mb-0">{stats.investigation}</p>
+                  <p className="display-6 fw-bold mb-0" style={{ color: '#b45309' }}>{stats.investigation}</p>
                 </div>
               </div>
               <div className="col-6 col-md-3">
@@ -170,17 +170,17 @@ function UserDashboard() {
                       <table className="table table-hover">
                         <thead>
                           <tr>
-                            <th>Tracking ID</th>
-                            <th>Title</th>
+                            <th className="text-nowrap" style={{ minWidth: '140px' }}>Tracking ID</th>
+                            <th style={{ minWidth: '180px' }}>Title</th>
                             <th>Assigned Officer</th>
                             <th>Status</th>
-                            <th>Date</th>
+                            <th className="text-nowrap" style={{ minWidth: '110px' }}>Date</th>
                           </tr>
                         </thead>
                         <tbody>
                           {recentComplaints.map((complaint) => (
                             <tr key={complaint.id}>
-                              <td className="tracking-id">
+                              <td className="tracking-id text-nowrap">
                                 <Link
                                   to={`/complaint-details?id=${complaint.id}`}
                                   className="text-decoration-none"
@@ -188,7 +188,7 @@ function UserDashboard() {
                                   {complaint.tracking_id}
                                 </Link>
                               </td>
-                              <td>{complaint.title}</td>
+                              <td style={{ minWidth: '180px', whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{complaint.title}</td>
                               <td className="officer-cell">
                                 {getAssignedOfficer(complaint) ? (
                                   <span className="officer-text text-success fw-semibold">
@@ -204,7 +204,7 @@ function UserDashboard() {
                                   {complaint.status}
                                 </span>
                               </td>
-                              <td>{formatDate(complaint.created_at)}</td>
+                              <td className="text-nowrap">{formatDate(complaint.created_at)}</td>
                             </tr>
                           ))}
                         </tbody>
