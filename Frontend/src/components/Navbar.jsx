@@ -98,8 +98,8 @@ function Navbar({ authUser, isAdmin, onLogout }) {
               Cyber Crime Portal
             </Link>
 
-            {/* Right side controls on mobile (Profile Icon + Hamburger Toggler) */}
-            <div className="d-flex align-items-center gap-2 d-lg-none">
+            {/* Right side controls on mobile — right-aligned icon group (bell, profile, hamburger) */}
+            <div className="d-flex align-items-center justify-content-end gap-1 gap-sm-2 d-lg-none ms-auto flex-shrink-0 flex-nowrap">
               {authUser && (
                 <>
                   <Notifications authUser={authUser} />
@@ -116,12 +116,12 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                     </button>
                     {showMobileProfileDropdown && (
                     <>
-                    <div className="position-fixed top-0 start-0 w-100 h-100" style={{ position: 'fixed', inset: 0, zIndex: 1040, background: 'rgba(0,0,0,0.15)' }} onClick={() => setShowMobileProfileDropdown(false)} aria-hidden="true" />
-                    <ul className="dropdown-menu show shadow border-0 rounded-3 py-2 overflow-hidden" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, left: 'auto', zIndex: 1050, display: 'block', width: 'min(90vw, 256px)', minWidth: '220px', maxWidth: 'min(90vw, 256px)' }} aria-labelledby="mobileProfileDropdown">
+                    <div className="position-fixed top-0 start-0 w-100 h-100" style={{ position: 'fixed', inset: 0, zIndex: 1040, background: 'rgba(0,0,0,0.18)' }} onClick={() => setShowMobileProfileDropdown(false)} aria-hidden="true" />
+                    <ul className="dropdown-menu show shadow border-0 rounded-3 py-2" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, left: 'auto', zIndex: 1050, display: 'block', width: '256px', maxWidth: '90vw', minWidth: '220px', background: '#fff' }} aria-labelledby="mobileProfileDropdown">
                       <li>
-                        <div className="dropdown-item-text text-muted small pb-2 border-bottom mb-2">
-                          Signed in as<br />
-                          <strong className="text-dark d-block" style={{ whiteSpace: 'normal', overflowWrap: 'break-word', wordBreak: 'break-word' }} title={authUser.email || 'User'}>
+                        <div className="px-3 py-2 text-muted small border-bottom mb-2" style={{ whiteSpace: 'normal', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                          <span className="d-block">Signed in as</span>
+                          <strong className="text-dark d-block" style={{ whiteSpace: 'normal', overflowWrap: 'break-word', wordBreak: 'break-word', color: '#212529' }} title={authUser.email || 'User'}>
                             {authUser.email || 'User'}
                           </strong>
                         </div>
@@ -248,12 +248,12 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                       </button>
                       {showProfileDropdown && (
                       <>
-                      <div className="position-fixed top-0 start-0 w-100 h-100" style={{ position: 'fixed', inset: 0, zIndex: 1040, background: 'rgba(0,0,0,0.15)' }} onClick={() => setShowProfileDropdown(false)} aria-hidden="true" />
-                      <ul className="dropdown-menu show shadow border-0 rounded-3 py-2 overflow-hidden" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, left: 'auto', zIndex: 1050, display: 'block', width: 'min(90vw, 256px)', minWidth: '220px', maxWidth: 'min(90vw, 256px)' }} aria-labelledby="profileDropdown">
+                      <div className="position-fixed top-0 start-0 w-100 h-100" style={{ position: 'fixed', inset: 0, zIndex: 1040, background: 'rgba(0,0,0,0.18)' }} onClick={() => setShowProfileDropdown(false)} aria-hidden="true" />
+                      <ul className="dropdown-menu show shadow border-0 rounded-3 py-2" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, left: 'auto', zIndex: 1050, display: 'block', width: '256px', maxWidth: '90vw', minWidth: '220px', background: '#fff' }} aria-labelledby="profileDropdown">
                         <li>
-                          <div className="dropdown-item-text text-muted small pb-2 border-bottom mb-2">
-                            Signed in as<br />
-                            <strong className="text-dark d-block" style={{ whiteSpace: 'normal', overflowWrap: 'break-word', wordBreak: 'break-word' }} title={authUser.email || 'User'}>
+                          <div className="px-3 py-2 text-muted small border-bottom mb-2" style={{ whiteSpace: 'normal', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                            <span className="d-block">Signed in as</span>
+                            <strong className="text-dark d-block" style={{ whiteSpace: 'normal', overflowWrap: 'break-word', wordBreak: 'break-word', color: '#212529' }} title={authUser.email || 'User'}>
                               {authUser.email || 'User'}
                             </strong>
                           </div>
