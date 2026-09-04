@@ -18,7 +18,11 @@ const authenticatedLinks = [
 function Navbar({ authUser, isAdmin, onLogout }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showAuthorsModal, setShowAuthorsModal] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showMobileProfileDropdown, setShowMobileProfileDropdown] = useState(false);
   const navRef = useRef(null);
+  const profileRef = useRef(null);
+  const mobileProfileRef = useRef(null);
 
   const authors = [
     { name: 'Shubham Bhojane', role: 'Full Stack & Lead Developer' },
@@ -27,18 +31,26 @@ function Navbar({ authUser, isAdmin, onLogout }) {
     { name: 'Chaitrali Karale', role: 'Security & QA Engineer' }
   ];
 
-  // Close mobile menu on Escape key press or outside click
+  // Close menus on Escape key press or outside click
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setIsOpen(false);
         setShowAuthorsModal(false);
+        setShowProfileDropdown(false);
+        setShowMobileProfileDropdown(false);
       }
     };
 
     const handleClickOutside = (e) => {
       if (navRef.current && !navRef.current.contains(e.target)) {
         setIsOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfileDropdown(false);
+      }
+      if (mobileProfileRef.current && !mobileProfileRef.current.contains(e.target)) {
+        setShowMobileProfileDropdown(false);
       }
     };
 
@@ -91,32 +103,34 @@ function Navbar({ authUser, isAdmin, onLogout }) {
               {authUser && (
                 <>
                   <Notifications authUser={authUser} />
-                  <div className="dropdown">
+                  <div className="dropdown position-relative" ref={mobileProfileRef} style={{ position: 'relative' }}>
                     <button
                       className="nav-link dropdown-toggle d-flex align-items-center gap-1 text-dark text-decoration-none py-1 px-2 rounded-pill border bg-light btn btn-link"
                       id="mobileProfileDropdown"
                       type="button"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
+                      aria-expanded={showMobileProfileDropdown}
+                      aria-haspopup="true"
+                      onClick={() => setShowMobileProfileDropdown(prev => !prev)}
                     >
                       <i className="bi bi-person-circle fs-5 text-success"></i>
                     </button>
-                    <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-2 mt-2" aria-labelledby="mobileProfileDropdown">
+                    {showMobileProfileDropdown && (
+                    <ul className="dropdown-menu show shadow-sm border-0 rounded-3 py-2" style={{ position: 'absolute', top: '100%', right: 0, left: 'auto', zIndex: 1050, display: 'block', maxWidth: 'min(90vw, 240px)', minWidth: '200px' }} aria-labelledby="mobileProfileDropdown">
                       <li>
                         <div className="dropdown-item-text text-muted small pb-2 border-bottom mb-2">
                           Signed in as<br />
-                          <strong className="text-dark text-truncate d-block" style={{ maxWidth: '180px' }}>
+                          <strong className="text-dark d-block overflow-hidden text-truncate" style={{ maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={authUser.email || 'User'}>
                             {authUser.email || 'User'}
                           </strong>
                         </div>
                       </li>
                       <li>
-                        <Link className="dropdown-item py-2 d-flex align-items-center gap-2" to={isAdmin ? '/admin' : '/dashboard'} onClick={closeMenu}>
+                        <Link className="dropdown-item py-2 d-flex align-items-center gap-2" to={isAdmin ? '/admin' : '/dashboard'} onClick={() => { closeMenu(); setShowMobileProfileDropdown(false); }}>
                           <i className="bi bi-speedometer2 text-success"></i> Dashboard
                         </Link>
                       </li>
                       <li>
-                        <Link className="dropdown-item py-2 d-flex align-items-center gap-2" to="/profile" onClick={closeMenu}>
+                        <Link className="dropdown-item py-2 d-flex align-items-center gap-2" to="/profile" onClick={() => { closeMenu(); setShowMobileProfileDropdown(false); }}>
                           <i className="bi bi-person-badge text-success"></i> My Profile
                         </Link>
                       </li>
@@ -126,6 +140,7 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                           onClick={() => {
                             setShowAuthorsModal(true);
                             closeMenu();
+                            setShowMobileProfileDropdown(false);
                           }}
                         >
                           <i className="bi bi-code-slash text-success"></i> Developers Team
@@ -138,12 +153,14 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                           onClick={() => {
                             onLogout();
                             closeMenu();
+                            setShowMobileProfileDropdown(false);
                           }}
                         >
                           <i className="bi bi-box-arrow-right"></i> Logout
                         </button>
                       </li>
                     </ul>
+                    )}
                   </div>
                 </>
               )}
@@ -214,33 +231,35 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                       <Notifications authUser={authUser} />
                     </li>
 
-                    <li className="nav-item dropdown ms-lg-2 mt-2 mt-lg-0 d-none d-lg-block">
+                    <li className="nav-item ms-lg-2 mt-2 mt-lg-0 d-none d-lg-block position-relative" ref={profileRef} style={{ position: 'relative' }}>
                       <button
                         className="nav-link dropdown-toggle d-flex align-items-center gap-2 text-dark text-decoration-none py-1 px-2 rounded-pill border bg-light btn btn-link"
                         id="profileDropdown"
                         type="button"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
+                        aria-expanded={showProfileDropdown}
+                        aria-haspopup="true"
+                        onClick={() => setShowProfileDropdown(prev => !prev)}
                       >
                         <i className="bi bi-person-circle fs-5 text-success"></i>
-                        <span className="fw-medium small d-none d-xl-inline">{authUser.full_name || authUser.email || 'User'}</span>
+                        <span className="fw-medium small d-none d-xl-inline overflow-hidden text-truncate" style={{ maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{authUser.full_name || authUser.email || 'User'}</span>
                       </button>
-                      <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-2 mt-2" aria-labelledby="profileDropdown">
+                      {showProfileDropdown && (
+                      <ul className="dropdown-menu show shadow-sm border-0 rounded-3 py-2" style={{ position: 'absolute', top: '100%', right: 0, left: 'auto', zIndex: 1050, display: 'block', maxWidth: 'min(90vw, 240px)', minWidth: '210px' }} aria-labelledby="profileDropdown">
                         <li>
                           <div className="dropdown-item-text text-muted small pb-2 border-bottom mb-2">
                             Signed in as<br />
-                            <strong className="text-dark text-truncate d-block" style={{ maxWidth: '200px' }}>
+                            <strong className="text-dark d-block overflow-hidden text-truncate" style={{ maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={authUser.email || 'User'}>
                               {authUser.email || 'User'}
                             </strong>
                           </div>
                         </li>
                         <li>
-                          <Link className="dropdown-item py-2 d-flex align-items-center gap-2" to={isAdmin ? '/admin' : '/dashboard'} onClick={closeMenu}>
+                          <Link className="dropdown-item py-2 d-flex align-items-center gap-2" to={isAdmin ? '/admin' : '/dashboard'} onClick={() => { closeMenu(); setShowProfileDropdown(false); }}>
                             <i className="bi bi-speedometer2 text-success"></i> Dashboard
                           </Link>
                         </li>
                         <li>
-                          <Link className="dropdown-item py-2 d-flex align-items-center gap-2" to="/profile" onClick={closeMenu}>
+                          <Link className="dropdown-item py-2 d-flex align-items-center gap-2" to="/profile" onClick={() => { closeMenu(); setShowProfileDropdown(false); }}>
                             <i className="bi bi-person-badge text-success"></i> My Profile
                           </Link>
                         </li>
@@ -250,6 +269,7 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                             onClick={() => {
                               setShowAuthorsModal(true);
                               closeMenu();
+                              setShowProfileDropdown(false);
                             }}
                           >
                             <i className="bi bi-code-slash text-success"></i> Developers Team
@@ -262,12 +282,14 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                             onClick={() => {
                               onLogout();
                               closeMenu();
+                              setShowProfileDropdown(false);
                             }}
                           >
                             <i className="bi bi-box-arrow-right"></i> Logout
                           </button>
                         </li>
                       </ul>
+                      )}
                     </li>
                   </>
                 )}
