@@ -27,6 +27,9 @@ html {
 .navbar {
   background: rgba(227, 227, 178, 0.95);
   backdrop-filter: blur(10px);
+  padding-top: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
+  min-height: 56px;
 }
 
 .gov-topbar {

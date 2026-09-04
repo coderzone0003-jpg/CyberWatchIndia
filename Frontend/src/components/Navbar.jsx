@@ -91,28 +91,29 @@ function Navbar({ authUser, isAdmin, onLogout }) {
             </div>
           </div>
         </div>
-        <nav className="navbar navbar-expand-lg navbar-light shadow-sm bg-white">
-          <div className="container d-flex justify-content-between align-items-center">
-            <Link className="navbar-brand fw-bold text-success d-flex align-items-center gap-2" to="/" onClick={closeMenu}>
-              <i className="bi bi-shield-lock-fill text-success fs-4"></i>
+        <nav className="navbar navbar-expand-lg navbar-light shadow-sm bg-white py-2">
+          <div className="container d-flex justify-content-between align-items-center flex-nowrap gap-2" style={{ minHeight: '40px' }}>
+            <Link className="navbar-brand fw-bold text-success d-flex align-items-center gap-2 flex-shrink-0 py-1" to="/" onClick={closeMenu} style={{ fontSize: '0.95rem', whiteSpace: 'nowrap', marginRight: '0.5rem' }}>
+              <i className="bi bi-shield-lock-fill text-success" style={{ fontSize: '1.25rem' }}></i>
               Cyber Crime Portal
             </Link>
 
-            {/* Right side controls on mobile — right-aligned icon group (bell, profile, hamburger) */}
-            <div className="d-flex align-items-center justify-content-end gap-1 gap-sm-2 d-lg-none ms-auto flex-shrink-0 flex-nowrap">
+            {/* Right side controls — single-row right-aligned icon group (bell, profile, hamburger) */}
+            <div className="d-flex align-items-center justify-content-end gap-2 d-lg-none ms-auto flex-shrink-0 flex-nowrap" style={{ flexWrap: 'nowrap' }}>
               {authUser && (
                 <>
                   <Notifications authUser={authUser} />
                   <div className="dropdown position-relative" ref={mobileProfileRef} style={{ position: 'relative' }}>
                     <button
-                      className="nav-link dropdown-toggle d-flex align-items-center gap-1 text-dark text-decoration-none py-1 px-2 rounded-pill border bg-light btn btn-link"
+                      className="nav-link dropdown-toggle d-flex align-items-center justify-content-center text-dark text-decoration-none rounded-pill border bg-light btn btn-link"
                       id="mobileProfileDropdown"
+                      style={{ width: '36px', height: '36px', padding: '0' }}
                       type="button"
                       aria-expanded={showMobileProfileDropdown}
                       aria-haspopup="true"
                       onClick={() => setShowMobileProfileDropdown(prev => !prev)}
                     >
-                      <i className="bi bi-person-circle fs-5 text-success"></i>
+                      <i className="bi bi-person-circle text-success" style={{ fontSize: '1.15rem' }}></i>
                     </button>
                     {showMobileProfileDropdown && (
                     <>
@@ -167,9 +168,10 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                   </div>
                 </>
               )}
-              <button 
-                className="navbar-toggler ms-1" 
+              <button
+                className="navbar-toggler ms-1 p-1 px-2"
                 type="button" 
+                style={{ fontSize: '0.9rem', padding: '0.25rem 0.5rem' }}
                 onClick={() => setIsOpen(!isOpen)}
                 aria-expanded={isOpen}
                 aria-label="Toggle navigation"
