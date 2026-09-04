@@ -115,11 +115,13 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                       <i className="bi bi-person-circle fs-5 text-success"></i>
                     </button>
                     {showMobileProfileDropdown && (
-                    <ul className="dropdown-menu show shadow-sm border-0 rounded-3 py-2" style={{ position: 'absolute', top: '100%', right: 0, left: 'auto', zIndex: 1050, display: 'block', maxWidth: 'min(90vw, 240px)', minWidth: '200px' }} aria-labelledby="mobileProfileDropdown">
+                    <>
+                    <div className="position-fixed top-0 start-0 w-100 h-100" style={{ position: 'fixed', inset: 0, zIndex: 1040, background: 'rgba(0,0,0,0.15)' }} onClick={() => setShowMobileProfileDropdown(false)} aria-hidden="true" />
+                    <ul className="dropdown-menu show shadow border-0 rounded-3 py-2 overflow-hidden" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, left: 'auto', zIndex: 1050, display: 'block', width: 'min(90vw, 256px)', minWidth: '220px', maxWidth: 'min(90vw, 256px)' }} aria-labelledby="mobileProfileDropdown">
                       <li>
                         <div className="dropdown-item-text text-muted small pb-2 border-bottom mb-2">
                           Signed in as<br />
-                          <strong className="text-dark d-block overflow-hidden text-truncate" style={{ maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={authUser.email || 'User'}>
+                          <strong className="text-dark d-block" style={{ whiteSpace: 'normal', overflowWrap: 'break-word', wordBreak: 'break-word' }} title={authUser.email || 'User'}>
                             {authUser.email || 'User'}
                           </strong>
                         </div>
@@ -160,6 +162,7 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                         </button>
                       </li>
                     </ul>
+                    </>
                     )}
                   </div>
                 </>
@@ -244,11 +247,13 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                         <span className="fw-medium small d-none d-xl-inline overflow-hidden text-truncate" style={{ maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{authUser.full_name || authUser.email || 'User'}</span>
                       </button>
                       {showProfileDropdown && (
-                      <ul className="dropdown-menu show shadow-sm border-0 rounded-3 py-2" style={{ position: 'absolute', top: '100%', right: 0, left: 'auto', zIndex: 1050, display: 'block', maxWidth: 'min(90vw, 240px)', minWidth: '210px' }} aria-labelledby="profileDropdown">
+                      <>
+                      <div className="position-fixed top-0 start-0 w-100 h-100" style={{ position: 'fixed', inset: 0, zIndex: 1040, background: 'rgba(0,0,0,0.15)' }} onClick={() => setShowProfileDropdown(false)} aria-hidden="true" />
+                      <ul className="dropdown-menu show shadow border-0 rounded-3 py-2 overflow-hidden" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, left: 'auto', zIndex: 1050, display: 'block', width: 'min(90vw, 256px)', minWidth: '220px', maxWidth: 'min(90vw, 256px)' }} aria-labelledby="profileDropdown">
                         <li>
                           <div className="dropdown-item-text text-muted small pb-2 border-bottom mb-2">
                             Signed in as<br />
-                            <strong className="text-dark d-block overflow-hidden text-truncate" style={{ maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={authUser.email || 'User'}>
+                            <strong className="text-dark d-block" style={{ whiteSpace: 'normal', overflowWrap: 'break-word', wordBreak: 'break-word' }} title={authUser.email || 'User'}>
                               {authUser.email || 'User'}
                             </strong>
                           </div>
@@ -289,6 +294,7 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                           </button>
                         </li>
                       </ul>
+                      </>
                       )}
                     </li>
                   </>
