@@ -31,8 +31,14 @@ function Navbar({ authUser, isAdmin, onLogout }) {
     { name: 'Chaitrali Karale', role: 'Security & QA Engineer' }
   ];
 
-  // Close menus on Escape key press or outside click
+  // Close menus on Escape key press or outside click — with mutual exclusivity
   useEffect(() => {
+    const handlePanelOpen = (e) => {
+      const panel = e.detail;
+      if (panel !== 'hamburger') setIsOpen(false);
+      if (panel !== 'profile') setShowProfileDropdown(false);
+      if (panel !== 'mobileProfile') setShowMobileProfileDropdown(false);
+    };
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setIsOpen(false);
@@ -41,7 +47,6 @@ function Navbar({ authUser, isAdmin, onLogout }) {
         setShowMobileProfileDropdown(false);
       }
     };
-
     const handleClickOutside = (e) => {
       if (navRef.current && !navRef.current.contains(e.target)) {
         setIsOpen(false);
@@ -53,10 +58,11 @@ function Navbar({ authUser, isAdmin, onLogout }) {
         setShowMobileProfileDropdown(false);
       }
     };
-
+    window.addEventListener('navbar:panel-open', handlePanelOpen);
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
+      window.removeEventListener('navbar:panel-open', handlePanelOpen);
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -92,14 +98,14 @@ function Navbar({ authUser, isAdmin, onLogout }) {
           </div>
         </div>
         <nav className="navbar navbar-expand-lg navbar-light shadow-sm bg-white py-2">
-          <div className="container d-flex justify-content-between align-items-center flex-nowrap gap-2" style={{ minHeight: '40px' }}>
+          <div className="container d-flex flex-wrap justify-content-between align-items-center gap-2" style={{ minHeight: '40px' }}>
             <Link className="navbar-brand fw-bold text-success d-flex align-items-center gap-2 flex-shrink-0 py-1" to="/" onClick={closeMenu} style={{ fontSize: '0.95rem', whiteSpace: 'nowrap', marginRight: '0.5rem' }}>
               <i className="bi bi-shield-lock-fill text-success" style={{ fontSize: '1.25rem' }}></i>
               Cyber Crime Portal
             </Link>
 
             {/* Right side controls — single-row right-aligned icon group (bell, profile, hamburger) */}
-            <div className="d-flex align-items-center justify-content-end gap-2 d-lg-none ms-auto flex-shrink-0 flex-nowrap" style={{ flexWrap: 'nowrap' }}>
+            <div className="d-flex align-items-center justify-content-end gap-1 gap-sm-2 d-lg-none ms-auto flex-shrink-0" style={{ flexWrap: 'nowrap' }}>
               {authUser && (
                 <>
                   <Notifications authUser={authUser} />
@@ -111,7 +117,7 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                       type="button"
                       aria-expanded={showMobileProfileDropdown}
                       aria-haspopup="true"
-                      onClick={() => setShowMobileProfileDropdown(prev => !prev)}
+                      onClick={() => { const next = !showMobileProfileDropdown; setShowMobileProfileDropdown(next); if (next) { setIsOpen(false); window.dispatchEvent(new CustomEvent('navbar:panel-open', { detail: 'mobileProfile' })); } }}
                     >
                       <i className="bi bi-person-circle text-success" style={{ fontSize: '1.15rem' }}></i>
                     </button>
@@ -169,10 +175,10 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                 </>
               )}
               <button
-                className="navbar-toggler ms-1 p-1 px-2"
+                className="navbar-toggler ms-1 p-1 px-2 flex-shrink-0"
                 type="button" 
-                style={{ fontSize: '0.9rem', padding: '0.25rem 0.5rem' }}
-                onClick={() => setIsOpen(!isOpen)}
+                style={{ fontSize: '0.9rem', padding: '0.25rem 0.5rem', flexShrink: 0 }}
+                onClick={() => { const next = !isOpen; setIsOpen(next); if (next) { setShowMobileProfileDropdown(false); setShowProfileDropdown(false); window.dispatchEvent(new CustomEvent('navbar:panel-open', { detail: 'hamburger' })); } }}
                 aria-expanded={isOpen}
                 aria-label="Toggle navigation"
               >
@@ -180,8 +186,9 @@ function Navbar({ authUser, isAdmin, onLogout }) {
               </button>
             </div>
 
+            {isOpen && <div onClick={() => setIsOpen(false)} aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 1040, background: 'rgba(0,0,0,0.18)' }} className="d-lg-none" />}
             <div className={`collapse navbar-collapse ${isOpen ? 'show' : ''}`} id="govNavbar">
-              <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-3 pb-3 pb-lg-0">
+              <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-3 pb-3 pb-lg-0" style={{ width: '100%', maxWidth: '100%' }}>
                 {!authUser && publicLinks.map((item) => (
                   <li className="nav-item" key={item.to}>
                     <NavLink 
@@ -243,7 +250,7 @@ function Navbar({ authUser, isAdmin, onLogout }) {
                         type="button"
                         aria-expanded={showProfileDropdown}
                         aria-haspopup="true"
-                        onClick={() => setShowProfileDropdown(prev => !prev)}
+                        onClick={() => { const next = !showProfileDropdown; setShowProfileDropdown(next); if (next) { setIsOpen(false); setShowMobileProfileDropdown(false); window.dispatchEvent(new CustomEvent('navbar:panel-open', { detail: 'profile' })); } }}
                       >
                         <i className="bi bi-person-circle fs-5 text-success"></i>
                         <span className="fw-medium small d-none d-xl-inline overflow-hidden text-truncate" style={{ maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{authUser.full_name || authUser.email || 'User'}</span>

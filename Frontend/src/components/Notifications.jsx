@@ -6,6 +6,16 @@ function Notifications({ authUser }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const notifyRef = React.useRef(null);
+  React.useEffect(() => {
+    const h = (e) => { if (notifyRef.current && !notifyRef.current.contains(e.target)) setIsOpen(false); };
+    const k = (e) => { if (e.key === 'Escape') setIsOpen(false); };
+    if (isOpen) {
+      document.addEventListener('mousedown', h);
+      document.addEventListener('keydown', k);
+      return () => { document.removeEventListener('mousedown', h); document.removeEventListener('keydown', k); };
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (authUser) {
@@ -109,16 +119,22 @@ function Notifications({ authUser }) {
   if (!authUser) return null;
 
   return (
-    <div className="notifications-dropdown position-relative">
+    <div className="notifications-dropdown" ref={notifyRef} style={{ position: 'relative' }}>
       <button
         className="btn btn-link position-relative p-2"
+        style={{ width: '36px', height: '36px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
         onClick={() => {
-          setIsOpen(!isOpen);
-          if (!isOpen) fetchNotifications();
+          const next = !isOpen;
+          setIsOpen(next);
+          if (next) fetchNotifications();
+          // close sibling panels via custom event
+          if (next) window.dispatchEvent(new CustomEvent('navbar:panel-open', { detail: 'notifications' }));
         }}
         title="Notifications"
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
-        <i className="bi bi-bell fs-5"></i>
+        <i className="bi bi-bell" style={{ fontSize: '1.15rem' }}></i>
         {unreadCount > 0 && (
           <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -127,7 +143,9 @@ function Notifications({ authUser }) {
       </button>
 
       {isOpen && (
-        <div className="dropdown-menu show position-absolute end-0 mt-2 shadow" style={{ minWidth: '350px', zIndex: 1000 }}>
+        <>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1040, background: 'rgba(0,0,0,0.18)' }} onClick={() => setIsOpen(false)} aria-hidden="true" />
+        <div className="dropdown-menu show shadow border-0 rounded-3" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, left: 'auto', zIndex: 1050, display: 'block', width: 'min(90vw, 320px)', maxWidth: 'calc(100vw - 16px)', minWidth: '220px', background: '#fff', overflow: 'hidden' }}>
           <div className="dropdown-header d-flex justify-content-between align-items-center">
             <strong>Notifications</strong>
             {unreadCount > 0 && (
@@ -179,19 +197,17 @@ function Notifications({ authUser }) {
           </div>
 
           {notifications.length > 0 && (
-            <div className="dropdown-footer text-center">
+            <div className="dropdown-footer text-center border-top pt-2 mt-2">
               <button
                 className="btn btn-sm btn-link text-decoration-none"
-                onClick={() => {
-                  // Navigate to notifications page if exists
-                  setIsOpen(false);
-                }}
+                onClick={() => setIsOpen(false)}
               >
                 View all notifications
               </button>
             </div>
           )}
         </div>
+        </>
       )}
     </div>
   );
